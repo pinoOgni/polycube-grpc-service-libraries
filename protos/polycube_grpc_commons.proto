@@ -1,0 +1,473 @@
+syntax = "proto3";
+
+package commons;
+option cc_enable_arenas = true;
+option go_package = "github.com/polycube/commons";
+
+service Polycube {
+
+
+/*
+  ====================================================================================================
+                                        SERVICE MANAGEMENT CALLS
+  ====================================================================================================
+*/
+  rpc Unsubscribe(ServicedInfo) returns (Bool) {}
+  rpc Subscribe(stream ToPolycubed) returns (stream ToServiced) {} 
+
+/*
+  ====================================================================================================
+                                        CUBE MANAGEMENT CALLS
+  ====================================================================================================
+*/
+  rpc Reload(Dataplane) returns (Empty) {}
+  rpc DestroyCube(CubeManagement) returns (Bool) {}
+  rpc CreateCube(CubeManagement) returns (Bool) {}
+
+/*
+  ====================================================================================================
+                                        TODO OR MAYBE TODO
+  ====================================================================================================
+*/
+  rpc SimpleUnaryMethod(ToPolycubed) returns (ToServiced) {}
+
+/*
+  ====================================================================================================
+                                        EBPF MAP MANAGEMENT CALLS
+  ====================================================================================================
+*/
+  // https://www.bouncybouncy.net/blog/bpf_map_get_next_key-pitfalls/
+  rpc TableSet(ServicedToDataplaneRequest) returns (Bool) {}
+  rpc TableGetAll(ServicedToDataplaneRequest) returns (MapValue) {}
+  rpc TableGet(ServicedToDataplaneRequest) returns (MapValue) {}
+  rpc TableRemove(ServicedToDataplaneRequest) returns (Bool) {}
+  rpc TableRemoveAll(ServicedToDataplaneRequest) returns (Bool) {}
+
+
+/*
+  ====================================================================================================
+                                        PORT MANAGEMENT CALLS
+  ====================================================================================================
+*/
+  rpc SetPort(ServicedToDataplaneRequest) returns (Bool)  {}
+  rpc DelPort(ServicedToDataplaneRequest) returns (Bool)  {}
+  rpc SetPeer(ServicedToDataplaneRequest) returns (Bool)  {}
+}
+
+
+/*
+  ====================================================================================================
+                                        GENERIC MESSAGES
+  * Empty
+  * Bool
+  * ServicedInfo
+  ====================================================================================================
+*/
+
+/*
+    This message represents an empty message
+    Q: Why define a Empty message instead of using google.protobuf.Empty ?
+    A: https://github.com/twitchtv/twirp/issues/104
+*/
+message Empty {}
+
+
+/*
+    generic message wrapper with a bool field
+    use case: unsubscribe serviced reply
+
+    Why a wrapper? We cannot use a primitive type. We MUST use a message type.
+    This is important because a message type can be extended later, 
+    in case we decide you want to add a new parameter or return some additional data.
+*/
+message Bool {   
+    bool status = 1; 
+}
+
+/*
+    This message contains useful info about the serviced/client
+    maybe this will be put inside metadata in the future
+
+    cube_name is optional because the ServicedInfo could be used
+        * as a message referred for a cube (in ToPolycubed or ToServiced) ==> cube_name is not empty
+        * or as a message for the service registration phase (in ToPolycubed with subscribe=true) ==> cube_name is empty
+*/
+message ServicedInfo {
+    string service_name = 1; // router
+    int32 uuid = 2; // random number generated from the service, to uniquely identify a service/cube/client 
+    optional string cube_name = 3; //r1 
+    optional string port_name = 4; //p1
+    optional string peer_name = 5; //toVeth1
+}
+
+
+
+/*
+  ====================================================================================================
+                                        POLYCUBED TO SERVICED MESSAGES
+  * ToServiced
+  * RestUserToServicedRequest
+  * DataplaneToServicedRequest
+  * DataplaneToServicedPacket
+  ====================================================================================================
+*/
+
+
+
+/*
+    This message represents a wrapper for all data passing through the stream
+    from Polycubed to Serviced
+    As you can see there is the oneof keyword to distinguish between various cases
+    oneof description: If you have a message with many optional fields and where at most 
+    one field will be set at the same time, you can enforce this behavior and save memory 
+    by using the oneof feature.
+*/
+message ToServiced {
+    ServicedInfo serviced_info = 1;
+    oneof to_serviced {
+        DataplaneToServicedRequest dataplane_to_serviced_request = 2;
+        RestUserToServicedRequest rest_user_to_service_request = 3;
+        DataplaneToServicedPacket dataplane_to_serviced_packet = 4;
+    }
+}
+
+/*
+    user to dataplane case: this is the message created from the rest user (for example with polycubectl)
+    to the dataplane of the serviced, it should pass through the serviced i.e. the controlplane
+    
+    user to service case: this is the message created from the rest user to the controlplane of the serviced
+
+    the serviced should be distinguish between the two cases above and in the first case it should
+    create a unary request to Polycubed which will contact the dataplane of Serviced
+*/
+message RestUserToServicedRequest {
+    string http_verb = 1; // PATCH
+    string url = 2; // http://localhost:9000/polycube/v1/router/r1/ports/p1/ip
+    optional string request_body = 3; // request body "1.1.1.1/24"
+}
+
+/*
+    dataplane to service case: this is the request created from the dataplane to the service 
+*/
+message DataplaneToServicedRequest {
+    string controlplane_method = 1;
+    repeated bytes parameters = 2;
+}
+
+/*
+    dataplane to service case: this is the request created from the dataplane to the service
+    IT REPRESENTS A PACKET
+*/
+// occhio che alcune cose erano 16 ma ora sono 32 per via di protobuf
+message DataplaneToServicedPacket {
+    uint32 cube_id = 1;
+    uint32 port_id = 2;
+    uint32 packet_len = 3;
+    uint32 traffic_class = 4;
+    uint32 reason = 5;
+    repeated uint32 metadata = 6;
+    repeated uint32 packet = 7;
+}
+
+/*
+  ====================================================================================================
+                                        SERVICED TO POLYCUBED MESSAGES
+  * ToPolycubed
+  * ServicedToDataplaneReply
+  * ServicedToRestUserReply
+  * ServicedToDataplaneRequest 
+  ====================================================================================================
+*/
+
+
+/*
+    This message represents a wrapper for all data passing through the stream 
+    from Serviced to Polycubed (in the case of subscribe=true, this message does not
+    really pass through the stream but it is used to create the stream)
+    As you can see there is the oneof keyword to distinguish between various cases
+    oneof description: If you have a message with many optional fields and where at most 
+    one field will be set at the same time, you can enforce this behavior and save memory 
+    by using the oneof feature.
+*/
+message ToPolycubed {
+    ServicedInfo serviced_info = 1;
+    oneof to_polycubed {
+        bool subscribe = 2;
+        ServicedToDataplaneReply serviced_to_dataplane_reply = 3;
+        ServicedToRestUserReply serviced_to_rest_user_reply = 4; 
+    }
+}
+
+
+
+/*
+    dataplane to service case: this is the reply created from the serviced
+    for a dataplane request
+*/
+message ServicedToDataplaneReply {
+    bool success = 1; // true/false for operation success
+    optional string message = 2; // possible message to be displayed/used by dataplane (?)
+}
+
+/*
+    user to dataplane case: this is the reply created from the serviced with the result of the dataplane
+    user to service case: this is the reply created from the serviced
+*/
+message ServicedToRestUserReply {
+    bool success = 1; // true/false for operation success
+    optional string message = 2; // possible message to be displayed to the final rest user
+}
+
+/*
+    This message is used for request coming from the service, which will use unary calls
+    This can be used in both service to dataplane OR user to dataplane cases: REQUEST
+*/
+message ServicedToDataplaneRequest {
+    ServicedInfo serviced_info = 1;
+    CubeInfo cube_info = 2;
+    oneof request_type {
+        SetRequest set_request = 3;
+        GetRequest get_request = 4;
+        RemoveRequest remove_request = 5;
+        Port port = 6;
+    }
+}
+
+
+/*
+  ====================================================================================================
+                                        CUBE MANAGEMENT MESSAGES
+  * CubeInfo
+  * CubeManagement
+  ====================================================================================================
+*/
+
+/*
+    This message contains info about the cube 
+    Note: there is a cube_name like in ServicedInfo (maybe this latter will be removed in the future)
+    This message is used in both service to dataplane OR user to dataplane cases: REQUEST
+
+    It is like the Dataplane message but the target is different
+*/
+
+message CubeInfo {
+    string cube_name = 1;
+    string map_name = 2;
+    int32 index = 3;
+    enum ProgramType {
+        INGRESS = 0;
+        EGRESS = 1;
+      }
+    ProgramType program_type = 4;
+}
+
+
+/*
+    This message is used for the cube creation and also for cube destruction
+    1. create cube: cube_name, maybe service_name, ingress_code, egress_code, loglevel and cube_type
+    2. destroy cube: cube_name, service_name, maybe cube_type
+*/
+message CubeManagement {
+    string cube_name = 1;
+    optional string service_name = 2;
+    optional int32 uuid = 3;
+    optional string ingress_code = 4;
+    optional string egress_code = 5;
+    optional string loglevel = 6;
+    optional string conf = 7;
+}
+
+/*
+  ====================================================================================================
+                                        PORT MANAGEMENT MESSAGES
+  * Port
+  ====================================================================================================
+*/
+
+/*
+    This message is used to represent a generic port
+    Version 1
+    pino: TODO improve it
+*/
+message Port {
+    string name = 1;
+    optional string peer = 2;
+    enum PortStatus {
+        DOWN = 0;
+        UP = 1;
+      }
+    PortStatus port_status = 3;
+    enum PortType {
+        TC = 0;
+        XDP = 1;
+      }
+    PortType port_type = 4;
+}
+
+/*
+    enum CubeType {
+        TC = 0;
+        XDP_SKB = 1;
+        XDP_DRV = 2;
+      }
+    CubeType cube_type = 6;
+*/
+
+
+
+/*
+  ====================================================================================================
+                                        EBPF MAPS MANAGEMENT MESSAGES
+  * MapValue
+  * SetRequest
+  * GetRequest
+  * RemoveRequest
+  ====================================================================================================
+*/
+
+
+/*
+    This message is used for the reply coming from the dataplane
+    This message is used in both service to dataplane OR user to dataplane cases: REPLY
+
+    Note: some fileds could be removed in the future, for now I put every field (more or less) that come from TableDesc of Polycube
+    For now only byteValues, name (for debugging) and leaf_desc 
+    Note: a counter is used in the case of TableGetAll and it indicates the number of value retrieved from the map
+*/
+
+message MapValue {
+    bytes byteValues = 1;
+
+    string name = 2;
+    int32 type = 3;
+    uint64 key_size = 4; // sizes are in bytes
+    uint64 leaf_size = 5;
+    uint64 max_entries = 6;
+    int32 flags = 7; 
+    string key_desc = 8; 
+    string leaf_desc = 9;
+
+    optional int32 counter = 10;
+}
+
+/*
+    This message is used to set a value in a map (the map name is defined in the CubeInfo message)
+    The sizes are set for safety
+*/
+message SetRequest {
+    bytes key = 1;
+    uint64 key_size = 2;
+    bytes value = 3;
+    uint64 value_size = 4;
+}
+
+/*
+    This message is used to a get request. 
+    There are 2 cases: get a single value where the client need to set all=false, the key, the key_size and the value_size (for safety)
+    and the second case is where the client wants the all map and so it sets all=true 
+*/
+message GetRequest {
+    bool all = 1;
+    optional bytes key = 2;
+    uint64 key_size = 3;
+    uint64 value_size = 4;
+}
+
+/*
+    This message is used in the request for the dataplane. 
+    It is used for both remove a single element and remove the entire map
+    To remove a single element the client needs to set all=false then the key and the key_size (for safety)
+    TO remove the all map the client need to set all=true
+*/
+message RemoveRequest {
+    bool all = 1;
+    bytes key = 2;
+    uint64 key_size = 3;
+    
+}
+
+
+
+/*
+  ====================================================================================================
+                                        TODO OR MAYBE TODO MESSAGES
+  ====================================================================================================
+*/
+
+
+
+/*
+    NOT USED
+*/
+message Index {
+    int32 index = 1;
+}
+
+
+/*
+    NOT USED
+    This message is used to add a program or to delete it
+    * If it is used by the CreateCube or Reload methods, the code contains the dataplane
+    * If it is used by the DestroyCube methods, the code is empty
+*/
+message Dataplane {
+    string cube_name = 1;
+    optional string code = 2;
+    int32 index = 3;
+    enum ProgramType {
+        INGRESS = 0;
+        EGRESS = 1;
+      }
+      ProgramType program_type = 4;
+}
+
+
+
+
+
+
+
+
+/*
+
+====================================================================================================
+====================================================================================================
+                                        OSSERVATIONS
+====================================================================================================
+====================================================================================================
+
+*/
+
+
+
+
+/*
+oneof protbuf osservation
+
+
+If you're using C++, make sure your code doesn't cause memory crashes. 
+The following sample code will crash because sub_message was already 
+deleted by calling the set_name() method
+
+
+SampleMessage message;
+SubMessage* sub_message = message.mutable_sub_message();
+message.set_name("name");      // Will delete sub_message
+sub_message->set_...            // Crashes here
+*/
+
+
+
+
+/*
+
+ghz --insecure --proto helloworld/helloworld.proto --call commons.Polycube.TableGet -d '{"name":"Joe"}' 0.0.0.0:9001 -n 1
+
+
+
+ghz --insecure --proto protos/polycube_grpc_commons.proto --call commons.Polycube.TableGet -d '{"serviced_info": {"service_name":"helloworld", "uuid":"1111","cube_name":"h1"}}' 0.0.0.0:9001 -n 1
+
+
+ghz --insecure --proto protos/polycube_grpc_commons.proto --call commons.Polycube.TableGet -d '{"serviced_info": {"service_name":"helloworld", "uuid":"1111","cube_name":"h1"}, {"cube_info": {"cube_name":"h1","map_name":"action_map","index":0,"program_type":0}, {"request_type": {"key_size":8,"value_size":16}}' 0.0.0.0:9001 -n 1
+
+*/
