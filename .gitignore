@@ -1,0 +1,3 @@
+polycube-grpc-cpp/build/*
+examples/cpp/pcn-helloworld2/build/*
+.vscode/*
