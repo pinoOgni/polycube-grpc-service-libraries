@@ -1,7 +1,7 @@
 package main
 
 import (
-	pb "github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go"
+  pb "github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go"
 	"time"
 	"fmt"
 	"unsafe"
