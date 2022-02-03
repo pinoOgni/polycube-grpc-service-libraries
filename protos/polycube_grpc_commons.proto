@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package commons;
 option cc_enable_arenas = true;
-option go_package = "github.com/polycube/commons";
+option go_package = "github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go";
 
 service Polycube {
 
