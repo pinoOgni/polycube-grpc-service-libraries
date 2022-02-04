@@ -2,10 +2,9 @@ syntax = "proto3";
 
 package commons;
 option cc_enable_arenas = true;
-option go_package = "github.com/polycube/commons";
+option go_package = "github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go";
 
 service Polycube {
-
 
 /*
   ====================================================================================================
@@ -24,12 +23,6 @@ service Polycube {
   rpc DestroyCube(CubeManagement) returns (Bool) {}
   rpc CreateCube(CubeManagement) returns (Bool) {}
 
-/*
-  ====================================================================================================
-                                        TODO OR MAYBE TODO
-  ====================================================================================================
-*/
-  rpc SimpleUnaryMethod(ToPolycubed) returns (ToServiced) {}
 
 /*
   ====================================================================================================
