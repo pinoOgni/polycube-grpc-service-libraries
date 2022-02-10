@@ -15,9 +15,20 @@ Creare il file dove scrivere il controlplane per esempio `helloworld2.go` e dent
 ```
 pb "github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go" // pb stands for polycube
 ```
-In seguito eseguire i seguenti comandi (TODO pinoOGni)
 
-FORSE
+
+NOTA: il go.mod e il go.sum potrebbero fare riferimento ad una versione della libreria vecchia rispetto alla attuale, in quel caso il go build dell'esempio darebbe vari errori (in particolare invalid version: unknown revision), quindi, cancellare il go.mod e il go.sum ed eseguire i segunti comandi:
+
+
+```
+
+go mod init helloworld2
+go mod tidy
+go build helloworld2.go
+
+```
+
+NOTA: solo per il caso in cui questa libreria faccia parte ancora di una repository privata
 
 ```
 git config --global url.git@github.com:.insteadOf https://github.com/
@@ -29,7 +40,7 @@ export GOPROXY=direct
 export GOSUMDB=off
 ```
 
-Infine
+Infine di nuovo
 ```
 go build helloworld2.go
 ```
@@ -51,5 +62,11 @@ protoc --proto_path=../protos --go_out=commons --go_opt=paths=source_relative --
 ```
 Grazie a questo comando, verranno rigenerati i file e posizionati dentro la cartella commons, utilizzando il file `.proto` posizionato nella directory `protos`
 
+
+Infine per poter usare la libreria locale, bisogna modificare il file go.mod del servizio a cui si sta lavorando aggiungendo questo
+
+```
+replace "github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go" v0.0.0-20220204154707-a45291043d50 => "local_path_to_polycube_grpc_go_library"
+```
 
 

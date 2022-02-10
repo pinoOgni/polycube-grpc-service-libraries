@@ -49,9 +49,9 @@ const (
 	uuid_seed = 9999
 )
 
-var DebugServiceName string = "router"
-var DebugUuid int32 = 1111
-var DebugCubeName string = "r1"
+var DebugServiceName string = "helloworld3"
+var DebugUuid int32 = 3153
+var DebugCubeName string = "h3"
 var DebugMapName string = "routing_table"
 
 //     auto tableGetReply = polycube.TableGet("router", 1111, "r1", "routing_table", program_type,key_pass,sizeof(key),sizeof(value));
@@ -99,6 +99,15 @@ var kacp = keepalive.ClientParameters{
 }
 
 
+/*
+  ====================================================================================================
+                                        SERVICE MANAGEMENT
+	* CreatePolycubeClient()
+	* func Subscribe(service_name string)
+	* func Unsubscribe()
+  ====================================================================================================
+*/
+
 
 
 
@@ -125,7 +134,7 @@ func CreatePolycubeClient(){
 	// defer conn.Close()
 
 	TheClient = &LonglivedPolycubeClient{
-		client: NewPolycubeClient(conn), //method of auto-generated library
+		client: NewPolycubeClient(conn), // method of auto-generated library
 		conn:   conn,
 		stream: nil,
 		ctx: context.Background(),
@@ -134,32 +143,109 @@ func CreatePolycubeClient(){
 	
 }
 
+
+
 /*
-	This method is used to request the destruction of a cube from Polycubed
+	This method is used to make a subscription of the client (Serviced) to the 
+	server (Polycubed). It creates the long-lived stream which will live for the entire
+	life of the Serviced and where ToPolycubed and ToServiced messages are exchanged
 
 */
+func Subscribe(service_name string) {
 
-// pino: TODO
-/*
-	in the grpc-go examples, in unary requests, a context is done with withtimeout, 
-	with 1 or 10 seconds. My question is, is it wrong to create a context that always 
-	lives with Background? Once you exit the Unary method, isn't it automatically deleted?
-*/
-func DestroyCube(cube_name string) {
-	// ctx := context.Background()
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	// request := &CubeManagement{CubeName: cube_name, ServiceName: &TheServiced.serviceName}
-	request := CubeManagement{}
-	request.CubeName = cube_name
-	request.ServiceName = &TheServiced.serviceName
-	fmt.Println("CubeManagement ", request.CubeName, " , ", request.ServiceName)
-	reply, err := TheClient.client.DestroyCube(ctx, &request)
+	// Background returns a non-nil, empty Context. It is never canceled, has no values,
+	// and has no deadline. It is typically used by the main function, initialization, 
+	// and tests, and as the top-level Context for incoming requests. 
+	
+	stream, err := TheClient.client.Subscribe(TheClient.ctx)
+	TheClient.stream = stream
 	if err != nil {
-		log.Fatalf("could not destroy cube: %v", err)
+		log.Fatalf("Subscribe, error creating stream: %v", err)
 	}
-	log.Printf("Reply from DestroyCube: %s", reply.GetStatus())
+	
+	// the service_name is saved internally so the developer does not need to write every time
+	TheServiced.serviceName = service_name 
+	
+	// creation of the uuid
+	rand.Seed(time.Now().UnixNano())
+	TheServiced.uuid = rand.Int31n(uuid_seed)
+	
+	// cube_name := "cube_name"
+	request := &ToPolycubed {ServicedInfo: &ServicedInfo{ServiceName: TheServiced.serviceName , Uuid: TheServiced.uuid}, ToPolycubed: &ToPolycubed_Subscribe {Subscribe: true}}
+	
+	if err := stream.Send(request); err != nil {
+		log.Fatalf("error sending on stream: %v", err)
+	}
+
+	fmt.Println("CIAO ", request.ServicedInfo.ServiceName)
+	fmt.Println("CIAO ", request.ServicedInfo.Uuid)
+	fmt.Println("CIAO ", request.ToPolycubed)
+	fmt.Println("unsafe.Sizeof(request) ", unsafe.Sizeof(request))
 }
+
+/*
+	This method is used to unsubscribe from the service
+*/
+func Unsubscribe() {
+	ctx := context.Background()
+	request := &ServicedInfo{ServiceName: TheServiced.serviceName , Uuid: TheServiced.uuid}
+	reply, err := TheClient.client.Unsubscribe(ctx, request)
+	if err != nil {
+		log.Fatalf("could not greet: %v", err)
+	}
+	log.Printf("Reply from Unsubscribe: %s", reply.GetStatus())
+}
+
+
+
+/*
+  ====================================================================================================
+                                        STREAM MANAGEMENT
+  ====================================================================================================
+*/
+
+
+
+
+/*
+	This method is used to read the long lived stream waiting for a request 
+	(a ToServiced message) from Polycubed to arrive.
+	After reading the request and understanding what type it is, 
+	it will call the correct method based on the registration made at the beginning
+
+	IL METODO CORRETTO DA CHIAMARE NON È QUI NELLA LIBRERIA MA NEL CONTROLPLANE
+	OSSIA NEL MAIN.GO
+
+	This method can be called in two ways from the controlplane:
+	1. as a call to a normal method, therefore of the type pb.ReadTheStream () and after 
+	this call the controlplane will do nothing but wait for some request from the user 
+	(precisely by reading from the stream)
+	2. as goroutine and in that case the controlpalne will be able to do anything else 
+	while the thread is in charge of reading the stream. Beware, however, that if the method 
+	that called the goroutine or the main terminates, the launched goroutine also terminates, 
+	so the developer will have to handle this case.
+*/
+func ReadTheStream() {
+	for {
+		request, err := TheClient.stream.Recv()
+		if err != nil {
+			fmt.Println("Failed to receive message: %v", err)
+			continue
+		}
+		fmt.Println("Message from Polycubed ", request.GetServicedInfo().GetServiceName())
+	}
+}
+
+
+
+
+
+
+/*
+  ====================================================================================================
+                                        EBPF MAPS MANAGEMENT
+  ====================================================================================================
+*/
 
 
 
@@ -167,12 +253,12 @@ func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	ctx := context.Background()	
 	request := ServicedToDataplaneRequest{}
 	request.ServicedInfo = &ServicedInfo {
-			ServiceName: DebugServiceName,
-			Uuid: DebugUuid,
+			ServiceName: TheServiced.serviceName,
+			Uuid: TheServiced.uuid,
 	}
 	request.CubeInfo = &CubeInfo {
-		CubeName: DebugCubeName,
-		MapName: DebugMapName,
+		CubeName: cube_name,
+		MapName: map_name,
 		ProgramType: program_type,
 	}
 	fmt.Println("key_size ", key_size)
@@ -222,10 +308,10 @@ func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	
 	*/
 	b, ok := key.(interface{})
-	fmt.Println("-------------------------")
+	fmt.Println("\n -------------------------")
 	fmt.Println(ok)
 	fmt.Println(b)
-	fmt.Println("-------------------------")
+	fmt.Println("\n -------------------------")
 	
 	
 	// key_bytes := make([]byte, key_size)
@@ -251,83 +337,88 @@ func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	return "ciao"
 }
 
-/*
-	This method is used to make a subscription of the client (Serviced) to the 
-	server (Polycubed). It creates the long-lived stream which will live for the entire
-	life of the Serviced and where ToPolycubed and ToServiced messages are exchanged
 
-*/
-func Subscribe(service_name string) {
 
-	// Background returns a non-nil, empty Context. It is never canceled, has no values,
-	//  and has no deadline. It is typically used by the main function, initialization, 
-	// and tests, and as the top-level Context for incoming requests. 
-	
-	stream, err := TheClient.client.Subscribe(TheClient.ctx)
-	TheClient.stream = stream
-	if err != nil {
-		log.Fatalf("Subscribe, error creating stream: %v", err)
+
+func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value interface{}, value_size uintptr) bool {
+	ctx := context.Background()	
+	request := ServicedToDataplaneRequest{}
+	request.ServicedInfo = &ServicedInfo {
+			ServiceName: TheServiced.serviceName,
+			Uuid: TheServiced.uuid,
 	}
-	
-	TheServiced.serviceName = service_name
-	rand.Seed(time.Now().UnixNano())
-	TheServiced.uuid = rand.Int31n(uuid_seed)
-	
-	// cube_name := "cube_name"
-	request := &ToPolycubed {ServicedInfo: &ServicedInfo{ServiceName: TheServiced.serviceName , Uuid: TheServiced.uuid}, ToPolycubed: &ToPolycubed_Subscribe {Subscribe: true}}
-	// Send some test messages.
-	if err := stream.Send(request); err != nil {
-		log.Fatalf("error sending on stream: %v", err)
+	request.CubeInfo = &CubeInfo {
+		CubeName: cube_name,
+		MapName: map_name,
+		ProgramType: program_type,
 	}
+	fmt.Println("key_size ", key_size)
+	fmt.Println("value_size ", value_size)
 
-	fmt.Println("CIAO ", request.ServicedInfo.ServiceName)
-	fmt.Println("CIAO ", request.ServicedInfo.Uuid)
-	fmt.Println("CIAO ", request.ToPolycubed)
-	fmt.Println("unsafe.Sizeof(request) ", unsafe.Sizeof(request))
-}
-
-/*
-	This method is used to unsubscribe from the service
-*/
-func Unsubscribe() {
-	ctx := context.Background()
-	request := &ServicedInfo{ServiceName: TheServiced.serviceName , Uuid: TheServiced.uuid}
-	reply, err := TheClient.client.Unsubscribe(ctx, request)
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
-	}
-	log.Printf("Reply from Unsubscribe: %s", reply.GetStatus())
-}
-
-
-/*
-	This method is used to read the long lived stream waiting for a request 
-	(a ToServiced message) from Polycubed to arrive.
-	After reading the request and understanding what type it is, 
-	it will call the correct method based on the registration made at the beginning
-
-	IL METODO CORRETTO DA CHIAMARE NON È QUI NELLA LIBRERIA MA NEL CONTROLPLANE
-	OSSIA NEL MAIN.GO
-
-	This method can be called in two ways from the controlplane:
-	1. as a call to a normal method, therefore of the type pb.ReadTheStream () and after 
-	this call the controlplane will do nothing but wait for some request from the user 
-	(precisely by reading from the stream)
-	2. as goroutine and in that case the controlpalne will be able to do anything else 
-	while the thread is in charge of reading the stream. Beware, however, that if the method 
-	that called the goroutine or the main terminates, the launched goroutine also terminates, 
-	so the developer will have to handle this case.
-*/
-func ReadTheStream() {
-	for {
-		request, err := TheClient.stream.Recv()
-		if err != nil {
-			fmt.Println("Failed to receive message: %v", err)
-			continue
+	fmt.Println("TABLESET ", key)
+	fmt.Println("TABLESET ", value)
+	key_bytes := new(bytes.Buffer)
+	if ret_key, ok_key := key.(interface{}); ok_key {
+		
+		err_key := binary.Write(key_bytes, binary.LittleEndian, ret_key)
+		if err_key != nil {
+			fmt.Println("binary.Write failed:", err_key)
 		}
-		fmt.Println("Message from Polycubed ", request.GetServicedInfo().GetServiceName())
+		fmt.Printf("% x", key_bytes.Bytes())
+	} else {
+		fmt.Println("nooooooooo")
 	}
+	
+	b_key, ok_key := key.(interface{})
+	fmt.Println("\n -------------------------")
+	fmt.Println(ok_key)
+	fmt.Println(b_key)
+	fmt.Println("\n -------------------------")
+	
+	value_bytes := new(bytes.Buffer)
+	if ret_value, ok_value := value.(interface{}); ok_value {
+		
+		err_value := binary.Write(value_bytes, binary.LittleEndian, ret_value)
+		if err_value != nil {
+			fmt.Println("binary.Write failed:", err_value)
+		}
+		fmt.Printf("% x", value_bytes.Bytes())
+	} else {
+		fmt.Println("nooooooooo")
+	}
+
+	
+	
+	// key_bytes := make([]byte, key_size)
+	// pino: TODO, per ora così
+	request.RequestType = &ServicedToDataplaneRequest_SetRequest{
+			SetRequest: &SetRequest{
+				Key: key_bytes.Bytes(),
+				KeySize: uint64(key_size),
+				Value: value_bytes.Bytes(),
+				ValueSize: uint64(value_size),
+			},
+	}
+	fmt.Println("TABLESET ", []byte(fmt.Sprint(key)))
+	fmt.Println("TABLESET ", []byte(fmt.Sprint(value)))
+	reply, err := TheClient.client.TableSet(ctx, &request)
+	if err != nil {
+		log.Fatalf("could not use TableGet: %v", err)
+	}
+	fmt.Println("Reply from TableSet: ", reply.GetStatus())
+
+	return reply.GetStatus()
 }
+
+
+
+
+/*
+  ====================================================================================================
+                                        CUBE MANAGEMENT
+  ====================================================================================================
+*/
+
 
 
 /*
@@ -335,9 +426,55 @@ func ReadTheStream() {
 	il metodo CreateCube del controlplane che a sua volta chiama questo
 */
 func CreateCube(cube_name string, ingress_code string, egress_code, conf string) {
+	// ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
+	// request := &CubeManagement{CubeName: cube_name, ServiceName: &TheServiced.serviceName}
+	request := CubeManagement{}
+	request.CubeName = cube_name
+	request.ServiceName = &TheServiced.serviceName
+	request.Uuid = &TheServiced.uuid
+	request.Conf = &conf
+	request.IngressCode = &ingress_code
+	request.EgressCode = &egress_code
+	fmt.Println("CubeManagement ", request.CubeName, " , ", request.ServiceName, "uuid ", request.Uuid)
+	reply, err := TheClient.client.CreateCube(ctx, &request)
+	if err != nil {
+		log.Fatalf("could not create cube: %v", err)
+	}
+	log.Printf("Reply from CreateCube: %s", reply.GetStatus())
 }
 
+
+
+
+// pino: TODO
+/*
+	in the grpc-go examples, in unary requests, a context is done with withtimeout, 
+	with 1 or 10 seconds. My question is, is it wrong to create a context that always 
+	lives with Background? Once you exit the Unary method, isn't it automatically deleted?
+*/
+/*
+	This method is used to request the destruction of a cube from Polycubed
+
+*/
+func DestroyCube(cube_name string) {
+	// ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	// request := &CubeManagement{CubeName: cube_name, ServiceName: &TheServiced.serviceName}
+	request := CubeManagement{}
+	request.CubeName = cube_name
+	request.ServiceName = &TheServiced.serviceName
+	request.Uuid = &TheServiced.uuid
+	fmt.Println("CubeManagement ", request.CubeName, " , ", request.ServiceName, "uuid ", request.Uuid)
+	reply, err := TheClient.client.DestroyCube(ctx, &request)
+	if err != nil {
+		log.Fatalf("could not destroy cube: %v", err)
+	}
+	log.Printf("Reply from DestroyCube: %s", reply.GetStatus())
+}
 
 
 
