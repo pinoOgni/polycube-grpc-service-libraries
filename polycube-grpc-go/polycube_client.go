@@ -41,6 +41,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"bytes"
 	"encoding/binary"
+	"sync"
 )
 
 const (
@@ -49,10 +50,10 @@ const (
 	uuid_seed = 9999
 )
 
-var DebugServiceName string = "helloworld3"
+var DebugServiceName string = "helloworldgo"
 var DebugUuid int32 = 3153
-var DebugCubeName string = "h3"
-var DebugMapName string = "routing_table"
+var DebugCubeName string = "h1"
+var DebugMapName string = "action_map" // routing_table
 
 //     auto tableGetReply = polycube.TableGet("router", 1111, "r1", "routing_table", program_type,key_pass,sizeof(key),sizeof(value));
 
@@ -225,6 +226,41 @@ func Unsubscribe() {
 	that called the goroutine or the main terminates, the launched goroutine also terminates, 
 	so the developer will have to handle this case.
 */
+func ReadTheStreamGoRoutine(wg *sync.WaitGroup) {
+	for {
+		request, err := TheClient.stream.Recv()
+		if err != nil {
+			fmt.Println("Failed to receive message: %v", err)
+			continue
+		}
+		fmt.Println("Message from Polycubed ", request.GetServicedInfo().GetServiceName())
+	
+	// router logic with method call of the controlplane
+		if request.GetRestUserToServiceRequest() != nil {
+			fmt.Println("ToServiced_RestUserToServiceRequest ")
+
+
+
+			// pino: TODO testing a simple call ==> it works
+			var key uint32 = 0
+			var value uint8
+			r1 := TableGet("h1","action_map",CubeInfo_INGRESS,key,unsafe.Sizeof(key),unsafe.Sizeof(value))
+			fmt.Println(r1)
+			
+			value = 2 // forward
+			r2 := TableSet("h1","action_map",CubeInfo_INGRESS,key,unsafe.Sizeof(key),value,unsafe.Sizeof(value))
+			fmt.Println(r2)  // should be true
+			
+			r3 := TableGet("h1","action_map",CubeInfo_INGRESS,key,unsafe.Sizeof(key),unsafe.Sizeof(value))
+			fmt.Println(r3)
+		}
+	
+	}
+	wg.Done()
+}
+
+
+
 func ReadTheStream() {
 	for {
 		request, err := TheClient.stream.Recv()
@@ -238,8 +274,20 @@ func ReadTheStream() {
 
 
 
+/*
+		reply := &ToPolycubed {
+			ServicedInfo: &ServicedInfo{
+						ServiceName: TheServiced.serviceName , 
+						Uuid: TheServiced.uuid}, 
+						ToPolycubed: &ToPolycubed_ServicedToRestUserReply {
+							ServicedToRestUserReply: &ServicedToRestUserReply {
+								Success: true,
+							},
+						},
+					}
+		TheClient.stream.Send(reply)
 
-
+*/
 
 /*
   ====================================================================================================
@@ -413,6 +461,63 @@ func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 
 
 
+func TableRemove(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr) bool {
+	ctx := context.Background()	
+	request := ServicedToDataplaneRequest{}
+	request.ServicedInfo = &ServicedInfo {
+			ServiceName: TheServiced.serviceName,
+			Uuid: TheServiced.uuid,
+	}
+	request.CubeInfo = &CubeInfo {
+		CubeName: cube_name,
+		MapName: map_name,
+		ProgramType: program_type,
+	}
+	fmt.Println("key_size ", key_size)
+
+	fmt.Println("TABLEREMOVE ", key)
+	key_bytes := new(bytes.Buffer)
+	if ret_key, ok_key := key.(interface{}); ok_key {
+		
+		err_key := binary.Write(key_bytes, binary.LittleEndian, ret_key)
+		if err_key != nil {
+			fmt.Println("binary.Write failed:", err_key)
+		}
+		fmt.Printf("% x", key_bytes.Bytes())
+	} else {
+		fmt.Println("nooooooooo")
+	}
+	
+	b_key, ok_key := key.(interface{})
+	fmt.Println("\n -------------------------")
+	fmt.Println(ok_key)
+	fmt.Println(b_key)
+	fmt.Println("\n -------------------------")
+	
+	
+	// key_bytes := make([]byte, key_size)
+	// pino: TODO, per ora così
+	request.RequestType = &ServicedToDataplaneRequest_RemoveRequest{
+			RemoveRequest: &RemoveRequest{
+				All: false,
+				Key: key_bytes.Bytes(),
+				KeySize: uint64(key_size),
+			},
+	}
+	fmt.Println("TABLEREMOVE", []byte(fmt.Sprint(key)))
+	reply, err := TheClient.client.TableRemove(ctx, &request)
+	if err != nil {
+		log.Fatalf("could not use TableRemove: %v", err)
+	}
+	fmt.Println("Reply from TableRemove: ", reply.GetStatus())
+
+	return reply.GetStatus()
+}
+
+
+
+
+
 /*
   ====================================================================================================
                                         CUBE MANAGEMENT
@@ -475,6 +580,122 @@ func DestroyCube(cube_name string) {
 	}
 	log.Printf("Reply from DestroyCube: %s", reply.GetStatus())
 }
+
+
+
+
+
+/*
+  ====================================================================================================
+                                        PORT MANAGEMENT
+  * Bool SetPort(const std::string cube_name, const std::string port_name);
+  * Bool DelPort(const std::string cube_name, const std::string port_name);
+  * Bool SetPeer(const std::string cube_name, const std::string port_name, const
+  std::string peer_name);
+  ====================================================================================================
+*/
+
+
+func SetPort(cube_name string, port_name string) bool {
+	ctx := context.Background()	
+	request := ServicedToDataplaneRequest{}
+	request.ServicedInfo = &ServicedInfo {
+			ServiceName: TheServiced.serviceName,
+			Uuid: TheServiced.uuid,
+	}
+	request.CubeInfo = &CubeInfo {
+		CubeName: cube_name,
+	}
+
+
+	request.RequestType = &ServicedToDataplaneRequest_Port{
+		Port: &Port{
+			Name: port_name,
+		},
+	}
+	fmt.Println("SETPORT", port_name)
+	reply, err := TheClient.client.SetPort(ctx, &request)
+	if err != nil {
+		log.Fatalf("could not use SetPort: %v", err)
+	}
+	fmt.Println("Reply from SetPort: ", reply.GetStatus())
+
+	return reply.GetStatus()
+}
+
+
+
+
+
+func DelPort(cube_name string, port_name string) bool {
+	ctx := context.Background()	
+	request := ServicedToDataplaneRequest{}
+	request.ServicedInfo = &ServicedInfo {
+			ServiceName: TheServiced.serviceName,
+			Uuid: TheServiced.uuid,
+	}
+	request.CubeInfo = &CubeInfo {
+		CubeName: cube_name,
+	}
+
+
+	request.RequestType = &ServicedToDataplaneRequest_Port{
+		Port: &Port{
+			Name: port_name,
+		},
+	}
+	fmt.Println("DELPORT", port_name)
+	reply, err := TheClient.client.DelPort(ctx, &request)
+	if err != nil {
+		log.Fatalf("could not use DelPort: %v", err)
+	}
+	fmt.Println("Reply from DelPort: ", reply.GetStatus())
+
+	return reply.GetStatus()
+}
+
+
+
+func SetPeer(cube_name string, port_name string, peer_name string) bool {
+	ctx := context.Background()	
+	request := ServicedToDataplaneRequest{}
+	request.ServicedInfo = &ServicedInfo {
+			ServiceName: TheServiced.serviceName,
+			Uuid: TheServiced.uuid,
+	}
+	request.CubeInfo = &CubeInfo {
+		CubeName: cube_name,
+	}
+
+
+	request.RequestType = &ServicedToDataplaneRequest_Port{
+		Port: &Port{
+			Name: port_name,
+			Peer: &peer_name,
+		},
+	}
+	fmt.Println("SETPEER", port_name)
+	reply, err := TheClient.client.SetPeer(ctx, &request)
+	if err != nil {
+		log.Fatalf("could not use SetPeer: %v", err)
+	}
+	fmt.Println("Reply from SetPeer: ", reply.GetStatus())
+
+	return reply.GetStatus()
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
