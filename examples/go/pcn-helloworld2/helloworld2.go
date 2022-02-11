@@ -4,7 +4,9 @@ import (
 	pb "github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go" // pb stands for polycube
 	"time"
 	"fmt"
-	"unsafe"
+	"io/ioutil"
+	"sync"
+	// "unsafe"
 )
 
 
@@ -23,32 +25,40 @@ type rt_v struct {
 func main() {
 	pb.CreatePolycubeClient()
 	time.Sleep(1 * time.Second)
-	//pb.Subscribe("helloworld")
-	fmt.Println("ciao")
-	time.Sleep(4*time.Second)
-	// go pb.ReadTheStream()
-	// pb.DestroyCube("h1")
-	// var key uint32 = 0
-	// var value uint8 
-	// r := pb.TableGet("h1","action_map",pb.CubeInfo_INGRESS,key,unsafe.Sizeof(key),unsafe.Sizeof(value))
-	// fmt.Println(r)
 	
-	key_rt_k := rt_k{
-		netmask_len: 24,
-		network: 196618,
-	}
-	var value_rt_v rt_v
-	r1 := pb.TableGet("r1","routing_table",pb.CubeInfo_INGRESS,key_rt_k,unsafe.Sizeof(key_rt_k),unsafe.Sizeof(value_rt_v))
-	fmt.Println(r1)
-
-	/*
-
-    rt_k key{
-        .netmask_len = 24, 
-        .network = 196618, // x0a\x00\x03\x00 is in big endian, 00, 03, 00, 0a is in little endian
-                          // 0a ==> 10, 00 ==> 0, 03 ==> 0*16^5 + 3*16^4 ==> 196608 , 00 ==> 0 ====> 10+196608 = 196618
-    };
-	*/
 
 
+
+	pb.Subscribe("helloworldgo")
+	ingress := GetDataplaneCode("Helloworld2_dp_ingress.c")
+	egress := GetDataplaneCode("Helloworld2_dp_egress.c")
+	time.Sleep(4*time.Second)
+	// pino: TODO, ora come ora è lo sviluppatore che deve configurare il proprio conf perché la libreria è generica
+	conf := `{"name":"h1","type":"TC","loglevel":"INFO","shadow":false,"span":false,"action":"drop"}`
+	pb.CreateCube("h1",ingress,egress,conf)
+	time.Sleep(4*time.Second)
+
+
+	// pino: TODO se lo metto prima e dopo faccio qualcosa mi da errore e crasha
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go pb.ReadTheStreamGoRoutine(&wg)
+	wg.Wait()
+
+	
+	fmt.Println("the end")
+	// time.Sleep(100*time.Second)
 }
+
+
+
+func GetDataplaneCode(filename string) string {
+	b, err := ioutil.ReadFile(filename)
+    if err != nil {
+        fmt.Print(err)
+    }
+	return string(b)
+}
+
+
+
