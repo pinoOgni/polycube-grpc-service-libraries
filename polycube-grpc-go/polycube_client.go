@@ -19,6 +19,20 @@
 	* go routine wait https://go.dev/tour/concurrency/5
 	* https://go.dev/play/p/S98GjeaGBX0
 	* https://gobyexample.com/waitgroups
+
+	MAP
+	* https://www.codegrepper.com/code-examples/go/golang+map+functions
+
+
+	ROUTER
+	* https://benhoyt.com/writings/go-routing/
+	* https://groups.google.com/g/golang-nuts/c/hbNCHMIA05g
+
+
+	URL
+	* https://pkg.go.dev/net/url
+	* https://golangbyexample.com/parse-url-golang/
+
 */
 
 
@@ -42,18 +56,28 @@ import (
 	"bytes"
 	"encoding/binary"
 	"sync"
+	"github.com/pinoOgni/urlpath"
 )
 
 const (
 	address     = "127.0.0.1:9001"
 	defaultName = "world"
 	uuid_seed = 9999
+	base_url = "/polycube/v1/"
 )
 
 var DebugServiceName string = "helloworldgo"
 var DebugUuid int32 = 3153
 var DebugCubeName string = "h1"
 var DebugMapName string = "action_map" // routing_table
+
+type key struct {
+	templateUrl  string
+	httpVerb string
+}
+var methods_map = make(map[key]func(ToServiced) ToPolycubed)
+
+
 
 //     auto tableGetReply = polycube.TableGet("router", 1111, "r1", "routing_table", program_type,key_pass,sizeof(key),sizeof(value));
 
@@ -108,7 +132,6 @@ var kacp = keepalive.ClientParameters{
 	* func Unsubscribe()
   ====================================================================================================
 */
-
 
 
 
@@ -227,6 +250,7 @@ func Unsubscribe() {
 	so the developer will have to handle this case.
 */
 func ReadTheStreamGoRoutine(wg *sync.WaitGroup) {
+	reply := ToPolycubed{}
 	for {
 		request, err := TheClient.stream.Recv()
 		if err != nil {
@@ -235,12 +259,27 @@ func ReadTheStreamGoRoutine(wg *sync.WaitGroup) {
 		}
 		fmt.Println("Message from Polycubed ", request.GetServicedInfo().GetServiceName())
 	
-	// router logic with method call of the controlplane
+		// router logic with method call of the controlplane
 		if request.GetRestUserToServiceRequest() != nil {
 			fmt.Println("ToServiced_RestUserToServiceRequest ")
+			requestUrl := request.GetRestUserToServiceRequest().GetUrl()
+			requestHttpVerb := request.GetRestUserToServiceRequest().GetHttpVerb()
+			fmt.Println("URL: ", requestUrl)
+			fmt.Println("VERB: ", requestHttpVerb)
+			for key, method := range methods_map {
+				match, ok := urlpath.MatchPath(key.templateUrl,requestUrl); 
+				if ok == true && requestHttpVerb == key.httpVerb {
+					fmt.Println("the url is present in the method_map ")
+					cubeName := match.Params["cubeName"]
+					request.ServicedInfo.CubeName = &cubeName
+					reply = method(*request)
 
+					break
+				}
+			}
+			TheClient.stream.Send(&reply)
 
-
+			/*
 			// pino: TODO testing a simple call ==> it works
 			var key uint32 = 0
 			var value uint8
@@ -253,6 +292,7 @@ func ReadTheStreamGoRoutine(wg *sync.WaitGroup) {
 			
 			r3 := TableGet("h1","action_map",CubeInfo_INGRESS,key,unsafe.Sizeof(key),unsafe.Sizeof(value))
 			fmt.Println(r3)
+			*/
 		}
 	
 	}
@@ -530,7 +570,7 @@ func TableRemove(cube_name string, map_name string, program_type CubeInfo_Progra
 	questo metodo verrà chiamato dal main.go oppure da readthestream che chiama
 	il metodo CreateCube del controlplane che a sua volta chiama questo
 */
-func CreateCube(cube_name string, ingress_code string, egress_code, conf string) {
+func CreateCube(cube_name string, ingress_code string, egress_code, conf string) bool {
 	// ctx := context.Background()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -549,6 +589,7 @@ func CreateCube(cube_name string, ingress_code string, egress_code, conf string)
 		log.Fatalf("could not create cube: %v", err)
 	}
 	log.Printf("Reply from CreateCube: %s", reply.GetStatus())
+	return reply.GetStatus()
 }
 
 
@@ -588,10 +629,9 @@ func DestroyCube(cube_name string) {
 /*
   ====================================================================================================
                                         PORT MANAGEMENT
-  * Bool SetPort(const std::string cube_name, const std::string port_name);
-  * Bool DelPort(const std::string cube_name, const std::string port_name);
-  * Bool SetPeer(const std::string cube_name, const std::string port_name, const
-  std::string peer_name);
+  * SetPort(cube_name string, port_name string) bool
+  * DelPort(cube_name string, port_name string) bool
+  * SetPeer(cube_name string, port_name string, peer_name string) bool
   ====================================================================================================
 */
 
@@ -688,14 +728,49 @@ func SetPeer(cube_name string, port_name string, peer_name string) bool {
 
 
 
+/*
+
+  ====================================================================================================
+                                        ROUTES MANAGEMENT
+	* RegisterHandler(path string, httpVerb string, handler func(ToServiced) ToPolycubed)
+	* RegisterHandlerGet(path string, handler func(ToServiced) ToPolycubed)
+	* RegisterHandlerPost(path string, handler func(ToServiced) ToPolycubed)
+  ====================================================================================================
+
+*/
 
 
+func RegisterHandler(path string, httpVerb string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: strings.ToUpper(httpVerb)}] = handler
+}
 
 
+func RegisterHandlerGet(path string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: "GET"}] = handler
+}
+
+func RegisterHandlerPost(path string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: "POST"}] = handler
+}
+
+func RegisterHandlerDelete(path string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: "DELETE"}] = handler
+}
 
 
+func RegisterHandlerPatch(path string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: "PATCH"}] = handler
+}
 
-
+func RegisterHandlerOptions(path string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: "OPTIONS"}] = handler
+}
 
 
 
@@ -708,8 +783,9 @@ func Pino() {
 
 	url := "polycube/v1/router/*"
 	r, _ := http.NewRequest("POST", url, strings.NewReader(""))
+	
 	fmt.Println("Ciao ", r.URL)
-	fmt.Println("Suca ", chi.URLParam(r,"serviceName"))
+	fmt.Println("800A", chi.URLParam(r,"serviceName"))
 }
 
 
@@ -798,8 +874,8 @@ func UniqueFunction() {
 	if err != nil {
 		log.Fatalf("error creating stream: %v", err)
 	}
-	suca := "cubo"
-	request := &ToPolycubed {ServicedInfo: &ServicedInfo{ServiceName: "NOME", Uuid: 1111111, CubeName: &suca }, ToPolycubed: &ToPolycubed_Subscribe {Subscribe: true}}
+	ciao := "cubo"
+	request := &ToPolycubed {ServicedInfo: &ServicedInfo{ServiceName: "NOME", Uuid: 1111111, CubeName: &ciao }, ToPolycubed: &ToPolycubed_Subscribe {Subscribe: true}}
 	// Send some test messages.
 	if err := sendMessage(stream, request); err != nil {
 		log.Fatalf("error sending on stream: %v", err)
