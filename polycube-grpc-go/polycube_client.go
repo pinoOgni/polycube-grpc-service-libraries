@@ -19,6 +19,20 @@
 	* go routine wait https://go.dev/tour/concurrency/5
 	* https://go.dev/play/p/S98GjeaGBX0
 	* https://gobyexample.com/waitgroups
+
+	MAP
+	* https://www.codegrepper.com/code-examples/go/golang+map+functions
+
+
+	ROUTER
+	* https://benhoyt.com/writings/go-routing/
+	* https://groups.google.com/g/golang-nuts/c/hbNCHMIA05g
+
+
+	URL
+	* https://pkg.go.dev/net/url
+	* https://golangbyexample.com/parse-url-golang/
+
 */
 
 
@@ -42,18 +56,28 @@ import (
 	"bytes"
 	"encoding/binary"
 	"sync"
+	"github.com/pinoOgni/urlpath"
 )
 
 const (
 	address     = "127.0.0.1:9001"
 	defaultName = "world"
 	uuid_seed = 9999
+	base_url = "/polycube/v1/"
 )
 
 var DebugServiceName string = "helloworldgo"
 var DebugUuid int32 = 3153
 var DebugCubeName string = "h1"
 var DebugMapName string = "action_map" // routing_table
+
+type key struct {
+	templateUrl  string
+	httpVerb string
+}
+var methods_map = make(map[key]func(ToServiced) ToPolycubed)
+
+
 
 //     auto tableGetReply = polycube.TableGet("router", 1111, "r1", "routing_table", program_type,key_pass,sizeof(key),sizeof(value));
 
@@ -111,7 +135,6 @@ var kacp = keepalive.ClientParameters{
 
 
 
-
 /*
 	This method is used to create a PolycubeClient, setting all the things required by
 	gRPC to make the connection bewteen the client and the server
@@ -126,7 +149,7 @@ func CreatePolycubeClient(){
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithKeepaliveParams(kacp))
 	fmt.Println("2")
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Printf("did not connect: %v", err)
 	} else {
 		fmt.Println("connected")
 	}
@@ -152,6 +175,7 @@ func CreatePolycubeClient(){
 	life of the Serviced and where ToPolycubed and ToServiced messages are exchanged
 
 */
+// pino: TODO maybe the subscribe method needs to return a bool value
 func Subscribe(service_name string) {
 
 	// Background returns a non-nil, empty Context. It is never canceled, has no values,
@@ -161,7 +185,7 @@ func Subscribe(service_name string) {
 	stream, err := TheClient.client.Subscribe(TheClient.ctx)
 	TheClient.stream = stream
 	if err != nil {
-		log.Fatalf("Subscribe, error creating stream: %v", err)
+		log.Printf("Subscribe, error creating stream: %v", err)
 	}
 	
 	// the service_name is saved internally so the developer does not need to write every time
@@ -175,7 +199,7 @@ func Subscribe(service_name string) {
 	request := &ToPolycubed {ServicedInfo: &ServicedInfo{ServiceName: TheServiced.serviceName , Uuid: TheServiced.uuid}, ToPolycubed: &ToPolycubed_Subscribe {Subscribe: true}}
 	
 	if err := stream.Send(request); err != nil {
-		log.Fatalf("error sending on stream: %v", err)
+		log.Printf("error sending on stream: %v", err)
 	}
 
 	fmt.Println("CIAO ", request.ServicedInfo.ServiceName)
@@ -187,12 +211,13 @@ func Subscribe(service_name string) {
 /*
 	This method is used to unsubscribe from the service
 */
+// pino: TODO maybe the unsubscribe method needs to return a bool value
 func Unsubscribe() {
 	ctx := context.Background()
 	request := &ServicedInfo{ServiceName: TheServiced.serviceName , Uuid: TheServiced.uuid}
 	reply, err := TheClient.client.Unsubscribe(ctx, request)
 	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+		log.Printf("could not greet: %v", err)
 	}
 	log.Printf("Reply from Unsubscribe: %s", reply.GetStatus())
 }
@@ -202,6 +227,9 @@ func Unsubscribe() {
 /*
   ====================================================================================================
                                         STREAM MANAGEMENT
+	func ReadTheStreamGoRoutine(wg *sync.WaitGroup)
+	func ReadTheStream()
+
   ====================================================================================================
 */
 
@@ -214,7 +242,8 @@ func Unsubscribe() {
 	After reading the request and understanding what type it is, 
 	it will call the correct method based on the registration made at the beginning
 
-	IL METODO CORRETTO DA CHIAMARE NON È QUI NELLA LIBRERIA MA NEL CONTROLPLANE
+	// pino: TODO
+	// IL METODO CORRETTO DA CHIAMARE NON È QUI NELLA LIBRERIA MA NEL CONTROLPLANE
 	OSSIA NEL MAIN.GO
 
 	This method can be called in two ways from the controlplane:
@@ -227,20 +256,39 @@ func Unsubscribe() {
 	so the developer will have to handle this case.
 */
 func ReadTheStreamGoRoutine(wg *sync.WaitGroup) {
+	reply := ToPolycubed{}
 	for {
 		request, err := TheClient.stream.Recv()
 		if err != nil {
 			fmt.Println("Failed to receive message: %v", err)
-			continue
+			break
 		}
 		fmt.Println("Message from Polycubed ", request.GetServicedInfo().GetServiceName())
 	
-	// router logic with method call of the controlplane
+		// router logic with method call of the controlplane
 		if request.GetRestUserToServiceRequest() != nil {
 			fmt.Println("ToServiced_RestUserToServiceRequest ")
+			requestUrl := request.GetRestUserToServiceRequest().GetUrl()
+			requestHttpVerb := request.GetRestUserToServiceRequest().GetHttpVerb()
+			fmt.Println("URL: ", requestUrl)
+			fmt.Println("VERB: ", requestHttpVerb)
+			for key, method := range methods_map {
+				match, ok := urlpath.MatchPath(key.templateUrl,requestUrl); 
+				if ok == true && requestHttpVerb == key.httpVerb {
+					fmt.Println("the url is present in the method_map ")
+					cubeName := match.Params["cubeName"]
+					request.ServicedInfo.CubeName = &cubeName
 
+					portName := match.Params["portName"]
+					request.ServicedInfo.PortName = &portName
+					reply = method(*request)
 
+					break
+				}
+			}
+			TheClient.stream.Send(&reply)
 
+			/*
 			// pino: TODO testing a simple call ==> it works
 			var key uint32 = 0
 			var value uint8
@@ -253,6 +301,7 @@ func ReadTheStreamGoRoutine(wg *sync.WaitGroup) {
 			
 			r3 := TableGet("h1","action_map",CubeInfo_INGRESS,key,unsafe.Sizeof(key),unsafe.Sizeof(value))
 			fmt.Println(r3)
+			*/
 		}
 	
 	}
@@ -289,15 +338,228 @@ func ReadTheStream() {
 
 */
 
+
+
+
+
 /*
   ====================================================================================================
-                                        EBPF MAPS MANAGEMENT
+                                        CUBE MANAGEMENT
   ====================================================================================================
 */
 
 
 
-func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value_size uintptr) interface{} {
+/*
+	This method is used to make a request to create a cube to Polycubed. 
+	
+	// pino: TODO
+	To implement
+		* extract other information from the conf and not just the name 
+		(which is not taken from the conf) such as the type of cube, if it is shadow or not ...
+*/
+func CreateCube(cube_name string, ingress_code string, egress_code, conf string) *Bool {
+	// ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// request := &CubeManagement{CubeName: cube_name, ServiceName: &TheServiced.serviceName}
+	request := CubeManagement{}
+	request.CubeName = cube_name
+	request.ServiceName = &TheServiced.serviceName
+	request.Uuid = &TheServiced.uuid
+	request.Conf = &conf
+	request.IngressCode = &ingress_code
+	request.EgressCode = &egress_code
+	fmt.Println("CubeManagement ", request.CubeName, " , ", request.ServiceName, "uuid ", request.Uuid)
+	reply, err := TheClient.client.CreateCube(ctx, &request)
+	if err != nil {
+		log.Printf("could not create cube: %v", err)
+	}
+	log.Printf("Reply from CreateCube: %s", reply.GetStatus())
+	return reply
+}
+
+
+
+
+// pino: TODO
+/*
+	in the grpc-go examples, in unary requests, a context is done with withtimeout, 
+	with 1 or 10 seconds. My question is, is it wrong to create a context that always 
+	lives with Background? Once you exit the Unary method, isn't it automatically deleted?
+*/
+/*
+	This method is used to request the destruction of a cube from Polycubed
+
+*/
+// pino: TODO return bool
+func DestroyCube(cube_name string) *Bool {
+	// ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	// request := &CubeManagement{CubeName: cube_name, ServiceName: &TheServiced.serviceName}
+	request := CubeManagement{}
+	request.CubeName = cube_name
+	request.ServiceName = &TheServiced.serviceName
+	request.Uuid = &TheServiced.uuid
+	fmt.Println("CubeManagement ", request.CubeName, " , ", request.ServiceName, "uuid ", request.Uuid)
+	reply, err := TheClient.client.DestroyCube(ctx, &request)
+	if err != nil {
+		log.Printf("could not destroy cube: %v", err)
+	}
+	log.Printf("Reply from DestroyCube: %s", reply.GetStatus())
+	return reply
+}
+
+
+
+
+
+
+
+
+
+
+
+/*
+  ====================================================================================================
+                                        PORT MANAGEMENT
+  * SetPort(cube_name string, port_name string) *Bool
+  * DelPort(cube_name string, port_name string) *Bool
+  * SetPeer(cube_name string, port_name string, peer_name string) *Bool
+  ====================================================================================================
+*/
+
+
+
+/*
+  This method is used to add a port to a cube. The concept of a door and
+  therefore of adding a door is different from adding a value to a map of a
+  cube. In fact you have to go through Polycubed which has a view of the doors
+  that exist. This is why this method was created.
+*/
+func SetPort(cube_name string, port_name string) *Bool {
+	ctx := context.Background()	
+	request := ServicedToDataplaneRequest{}
+	request.ServicedInfo = &ServicedInfo {
+			ServiceName: TheServiced.serviceName,
+			Uuid: TheServiced.uuid,
+	}
+	request.CubeInfo = &CubeInfo {
+		CubeName: cube_name,
+	}
+
+
+	request.RequestType = &ServicedToDataplaneRequest_Port{
+		Port: &Port{
+			Name: port_name,
+		},
+	}
+	fmt.Println("SETPORT", port_name)
+	reply, err := TheClient.client.SetPort(ctx, &request)
+	if err != nil {
+		log.Printf("could not use SetPort: %v", err)
+	}
+	fmt.Println("Reply from SetPort: ", reply.GetStatus())
+
+	return reply
+}
+
+
+
+
+/*
+  This method is used to remove a port to a cube. The concept of a door and
+  therefore of adding a door is different from adding a value to a map of a
+  cube. In fact you have to go through Polycubed which has a view of the doors
+  that exist. This is why this method was created.
+*/
+func DelPort(cube_name string, port_name string) *Bool {
+	ctx := context.Background()	
+	request := ServicedToDataplaneRequest{}
+	request.ServicedInfo = &ServicedInfo {
+			ServiceName: TheServiced.serviceName,
+			Uuid: TheServiced.uuid,
+	}
+	request.CubeInfo = &CubeInfo {
+		CubeName: cube_name,
+	}
+
+
+	request.RequestType = &ServicedToDataplaneRequest_Port{
+		Port: &Port{
+			Name: port_name,
+		},
+	}
+	fmt.Println("DELPORT", port_name)
+	reply, err := TheClient.client.DelPort(ctx, &request)
+	if err != nil {
+		log.Printf("could not use DelPort: %v", err)
+	}
+	fmt.Println("Reply from DelPort: ", reply.GetStatus())
+
+	return reply
+}
+
+
+
+/*
+  This method is used to set a peer for a given port
+*/
+
+func SetPeer(cube_name string, port_name string, peer_name string) *Bool {
+	ctx := context.Background()	
+	request := ServicedToDataplaneRequest{}
+	request.ServicedInfo = &ServicedInfo {
+			ServiceName: TheServiced.serviceName,
+			Uuid: TheServiced.uuid,
+	}
+	request.CubeInfo = &CubeInfo {
+		CubeName: cube_name,
+	}
+
+
+	request.RequestType = &ServicedToDataplaneRequest_Port{
+		Port: &Port{
+			Name: port_name,
+			Peer: &peer_name,
+		},
+	}
+	fmt.Println("SETPEER", port_name)
+	reply, err := TheClient.client.SetPeer(ctx, &request)
+	if err != nil {
+		log.Printf("could not use SetPeer: %v", err)
+	}
+	fmt.Println("Reply from SetPeer: ", reply.GetStatus())
+
+	return reply
+}
+
+
+
+
+
+
+/*
+  ====================================================================================================
+                                        EBPF MAPS MANAGEMENT
+	* func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value_size uintptr) interface{} 
+	* func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value interface{}, value_size uintptr) *Bool
+	* func TableRemove(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr) *Bool
+
+	// pino: TODO
+	TableRemoveAll
+	TableGetAll
+  ====================================================================================================
+*/
+
+
+/*
+  Given a key, this method is used to ask Polycube for data from an eBPF map of
+  a cube
+*/
+func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value_size uintptr) * MapValue {
 	ctx := context.Background()	
 	request := ServicedToDataplaneRequest{}
 	request.ServicedInfo = &ServicedInfo {
@@ -375,20 +637,24 @@ func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	fmt.Println("TABLEGET ", []byte(fmt.Sprint(key)))
 	reply, err := TheClient.client.TableGet(ctx, &request)
 	if err != nil {
-		log.Fatalf("could not use TableGet: %v", err)
+		log.Printf("could not use TableGet: %v", err)
+		return nil
 	}
 	fmt.Println("Reply from TableGet: ", reply.ByteValues[0])
 	fmt.Println("unsafe.Sizeof(reply.ByteValues)) ", unsafe.Sizeof(reply.ByteValues))
 	fmt.Println("len(reply.ByteValues)) ", len(reply.ByteValues))
 
 
-	return "ciao"
+	return reply
 }
 
 
 
-
-func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value interface{}, value_size uintptr) bool {
+/*
+  Given a key and a value, this method is used to request Polycube to write a
+  data in an eBPF map of a cube
+*/
+func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value interface{}, value_size uintptr) *Bool {
 	ctx := context.Background()	
 	request := ServicedToDataplaneRequest{}
 	request.ServicedInfo = &ServicedInfo {
@@ -403,14 +669,14 @@ func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	fmt.Println("key_size ", key_size)
 	fmt.Println("value_size ", value_size)
 
-	fmt.Println("TABLESET ", key)
-	fmt.Println("TABLESET ", value)
+	fmt.Println("TABLESET key ", key)
+	fmt.Println("TABLESET value ", value)
 	key_bytes := new(bytes.Buffer)
 	if ret_key, ok_key := key.(interface{}); ok_key {
-		
+		fmt.Println("key ret_key", ret_key)
 		err_key := binary.Write(key_bytes, binary.LittleEndian, ret_key)
 		if err_key != nil {
-			fmt.Println("binary.Write failed:", err_key)
+			fmt.Println("key binary.Write failed:", err_key)
 		}
 		fmt.Printf("% x", key_bytes.Bytes())
 	} else {
@@ -425,10 +691,10 @@ func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	
 	value_bytes := new(bytes.Buffer)
 	if ret_value, ok_value := value.(interface{}); ok_value {
-		
+		fmt.Println("value ret_value", ret_value)
 		err_value := binary.Write(value_bytes, binary.LittleEndian, ret_value)
 		if err_value != nil {
-			fmt.Println("binary.Write failed:", err_value)
+			fmt.Println("value binary.Write failed:", err_value)
 		}
 		fmt.Printf("% x", value_bytes.Bytes())
 	} else {
@@ -451,17 +717,20 @@ func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	fmt.Println("TABLESET ", []byte(fmt.Sprint(value)))
 	reply, err := TheClient.client.TableSet(ctx, &request)
 	if err != nil {
-		log.Fatalf("could not use TableGet: %v", err)
+		log.Printf("could not use TableSet: %v", err)
 	}
 	fmt.Println("Reply from TableSet: ", reply.GetStatus())
 
-	return reply.GetStatus()
+	return reply
 }
 
 
 
-
-func TableRemove(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr) bool {
+/*
+  Given a key, this method is used to request Polycube to delete a data in an
+  eBPF map of a cube
+*/
+func TableRemove(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr) *Bool {
 	ctx := context.Background()	
 	request := ServicedToDataplaneRequest{}
 	request.ServicedInfo = &ServicedInfo {
@@ -507,11 +776,11 @@ func TableRemove(cube_name string, map_name string, program_type CubeInfo_Progra
 	fmt.Println("TABLEREMOVE", []byte(fmt.Sprint(key)))
 	reply, err := TheClient.client.TableRemove(ctx, &request)
 	if err != nil {
-		log.Fatalf("could not use TableRemove: %v", err)
+		log.Printf("could not use TableRemove: %v", err)
 	}
 	fmt.Println("Reply from TableRemove: ", reply.GetStatus())
 
-	return reply.GetStatus()
+	return reply
 }
 
 
@@ -519,183 +788,51 @@ func TableRemove(cube_name string, map_name string, program_type CubeInfo_Progra
 
 
 /*
+
   ====================================================================================================
-                                        CUBE MANAGEMENT
+                                        ROUTES MANAGEMENT
+	* RegisterHandler(path string, httpVerb string, handler func(ToServiced) ToPolycubed)
+	* RegisterHandlerGet(path string, handler func(ToServiced) ToPolycubed)
+	* RegisterHandlerPost(path string, handler func(ToServiced) ToPolycubed)
+	* RegisterHandlerDelete(path string, handler func(ToServiced) ToPolycubed)
+	* RegisterHandlerPatch(path string, handler func(ToServiced) ToPolycubed)
+	* RegisterHandlerOptions(path string, handler func(ToServiced) ToPolycubed)
   ====================================================================================================
+
 */
 
 
-
-/*
-	questo metodo verrà chiamato dal main.go oppure da readthestream che chiama
-	il metodo CreateCube del controlplane che a sua volta chiama questo
-*/
-func CreateCube(cube_name string, ingress_code string, egress_code, conf string) {
-	// ctx := context.Background()
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// request := &CubeManagement{CubeName: cube_name, ServiceName: &TheServiced.serviceName}
-	request := CubeManagement{}
-	request.CubeName = cube_name
-	request.ServiceName = &TheServiced.serviceName
-	request.Uuid = &TheServiced.uuid
-	request.Conf = &conf
-	request.IngressCode = &ingress_code
-	request.EgressCode = &egress_code
-	fmt.Println("CubeManagement ", request.CubeName, " , ", request.ServiceName, "uuid ", request.Uuid)
-	reply, err := TheClient.client.CreateCube(ctx, &request)
-	if err != nil {
-		log.Fatalf("could not create cube: %v", err)
-	}
-	log.Printf("Reply from CreateCube: %s", reply.GetStatus())
+func RegisterHandler(path string, httpVerb string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: strings.ToUpper(httpVerb)}] = handler
 }
 
 
+func RegisterHandlerGet(path string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: "GET"}] = handler
+}
 
+func RegisterHandlerPost(path string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: "POST"}] = handler
+}
 
-// pino: TODO
-/*
-	in the grpc-go examples, in unary requests, a context is done with withtimeout, 
-	with 1 or 10 seconds. My question is, is it wrong to create a context that always 
-	lives with Background? Once you exit the Unary method, isn't it automatically deleted?
-*/
-/*
-	This method is used to request the destruction of a cube from Polycubed
-
-*/
-func DestroyCube(cube_name string) {
-	// ctx := context.Background()
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	// request := &CubeManagement{CubeName: cube_name, ServiceName: &TheServiced.serviceName}
-	request := CubeManagement{}
-	request.CubeName = cube_name
-	request.ServiceName = &TheServiced.serviceName
-	request.Uuid = &TheServiced.uuid
-	fmt.Println("CubeManagement ", request.CubeName, " , ", request.ServiceName, "uuid ", request.Uuid)
-	reply, err := TheClient.client.DestroyCube(ctx, &request)
-	if err != nil {
-		log.Fatalf("could not destroy cube: %v", err)
-	}
-	log.Printf("Reply from DestroyCube: %s", reply.GetStatus())
+func RegisterHandlerDelete(path string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: "DELETE"}] = handler
 }
 
 
-
-
-
-/*
-  ====================================================================================================
-                                        PORT MANAGEMENT
-  * Bool SetPort(const std::string cube_name, const std::string port_name);
-  * Bool DelPort(const std::string cube_name, const std::string port_name);
-  * Bool SetPeer(const std::string cube_name, const std::string port_name, const
-  std::string peer_name);
-  ====================================================================================================
-*/
-
-
-func SetPort(cube_name string, port_name string) bool {
-	ctx := context.Background()	
-	request := ServicedToDataplaneRequest{}
-	request.ServicedInfo = &ServicedInfo {
-			ServiceName: TheServiced.serviceName,
-			Uuid: TheServiced.uuid,
-	}
-	request.CubeInfo = &CubeInfo {
-		CubeName: cube_name,
-	}
-
-
-	request.RequestType = &ServicedToDataplaneRequest_Port{
-		Port: &Port{
-			Name: port_name,
-		},
-	}
-	fmt.Println("SETPORT", port_name)
-	reply, err := TheClient.client.SetPort(ctx, &request)
-	if err != nil {
-		log.Fatalf("could not use SetPort: %v", err)
-	}
-	fmt.Println("Reply from SetPort: ", reply.GetStatus())
-
-	return reply.GetStatus()
+func RegisterHandlerPatch(path string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: "PATCH"}] = handler
 }
 
-
-
-
-
-func DelPort(cube_name string, port_name string) bool {
-	ctx := context.Background()	
-	request := ServicedToDataplaneRequest{}
-	request.ServicedInfo = &ServicedInfo {
-			ServiceName: TheServiced.serviceName,
-			Uuid: TheServiced.uuid,
-	}
-	request.CubeInfo = &CubeInfo {
-		CubeName: cube_name,
-	}
-
-
-	request.RequestType = &ServicedToDataplaneRequest_Port{
-		Port: &Port{
-			Name: port_name,
-		},
-	}
-	fmt.Println("DELPORT", port_name)
-	reply, err := TheClient.client.DelPort(ctx, &request)
-	if err != nil {
-		log.Fatalf("could not use DelPort: %v", err)
-	}
-	fmt.Println("Reply from DelPort: ", reply.GetStatus())
-
-	return reply.GetStatus()
+func RegisterHandlerOptions(path string, handler func(ToServiced) ToPolycubed) {
+	templateUrl := base_url + TheServiced.serviceName + "/" + path
+	methods_map[key{templateUrl: templateUrl, httpVerb: "OPTIONS"}] = handler
 }
-
-
-
-func SetPeer(cube_name string, port_name string, peer_name string) bool {
-	ctx := context.Background()	
-	request := ServicedToDataplaneRequest{}
-	request.ServicedInfo = &ServicedInfo {
-			ServiceName: TheServiced.serviceName,
-			Uuid: TheServiced.uuid,
-	}
-	request.CubeInfo = &CubeInfo {
-		CubeName: cube_name,
-	}
-
-
-	request.RequestType = &ServicedToDataplaneRequest_Port{
-		Port: &Port{
-			Name: port_name,
-			Peer: &peer_name,
-		},
-	}
-	fmt.Println("SETPEER", port_name)
-	reply, err := TheClient.client.SetPeer(ctx, &request)
-	if err != nil {
-		log.Fatalf("could not use SetPeer: %v", err)
-	}
-	fmt.Println("Reply from SetPeer: ", reply.GetStatus())
-
-	return reply.GetStatus()
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -708,8 +845,9 @@ func Pino() {
 
 	url := "polycube/v1/router/*"
 	r, _ := http.NewRequest("POST", url, strings.NewReader(""))
+	
 	fmt.Println("Ciao ", r.URL)
-	fmt.Println("Suca ", chi.URLParam(r,"serviceName"))
+	fmt.Println("800A", chi.URLParam(r,"serviceName"))
 }
 
 
@@ -765,7 +903,7 @@ func sendMessage(stream Polycube_SubscribeClient, msg *ToPolycubed) error {
 func recvMessage(wantErrCode codes.Code) {
 		res, err := TheClient.stream.Recv()
 		if status.Code(err) != wantErrCode {
-			log.Fatalf("TheClient.stream.Recv() = %v, %v; want _, status.Code(err)=%v", res, err, wantErrCode)
+			log.Printf("TheClient.stream.Recv() = %v, %v; want _, status.Code(err)=%v", res, err, wantErrCode)
 		}
 		if err != nil {
 			fmt.Printf("TheClient.stream.Recv() returned expected error %v\n", err)
@@ -780,7 +918,7 @@ func UniqueFunction() {
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithKeepaliveParams(kacp))
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Printf("did not connect: %v", err)
 	}
 	defer conn.Close()
 
@@ -796,13 +934,13 @@ func UniqueFunction() {
 	
 	stream, err := c.Subscribe(ctx)
 	if err != nil {
-		log.Fatalf("error creating stream: %v", err)
+		log.Printf("error creating stream: %v", err)
 	}
-	suca := "cubo"
-	request := &ToPolycubed {ServicedInfo: &ServicedInfo{ServiceName: "NOME", Uuid: 1111111, CubeName: &suca }, ToPolycubed: &ToPolycubed_Subscribe {Subscribe: true}}
+	ciao := "cubo"
+	request := &ToPolycubed {ServicedInfo: &ServicedInfo{ServiceName: "NOME", Uuid: 1111111, CubeName: &ciao }, ToPolycubed: &ToPolycubed_Subscribe {Subscribe: true}}
 	// Send some test messages.
 	if err := sendMessage(stream, request); err != nil {
-		log.Fatalf("error sending on stream: %v", err)
+		log.Printf("error sending on stream: %v", err)
 	}
 
 	for {

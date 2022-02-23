@@ -49,9 +49,6 @@ int main(int argc, char **argv) {
   std::thread readthestream (&PolycubeClient::ReadTheStream,&polycubeclientgrpc);
   std::cout << "In Subscribe between thread and join" << std::endl;
   
-  //std::this_thread::sleep_for(std::chrono::milliseconds(40000));
-  commons::CubeInfo_ProgramType program_type = commons::CubeInfo_ProgramType_INGRESS;
-
   std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
 
@@ -59,7 +56,9 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-
+/*
+	This method is used to get the action saved in the action_map table
+*/
 ToPolycubed getAction(ToServiced request, PolycubeClient* polycubeclientgrpc) {
   
   // pino: TODO, grpc
@@ -85,7 +84,9 @@ ToPolycubed getAction(ToServiced request, PolycubeClient* polycubeclientgrpc) {
 }
 
 
-
+/*
+  This method is used to set the action in the action_map table
+*/
 ToPolycubed setAction(ToServiced request, PolycubeClient* polycubeclientgrpc) {
   
   // auto request_body = nlohmann::json::parse(std::string { request.rest_user_to_service_request().request_body() });
