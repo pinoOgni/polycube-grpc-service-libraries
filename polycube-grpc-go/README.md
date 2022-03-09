@@ -5,13 +5,13 @@ Questa è la libreria polycube-grpc-go che permette di scrivere una servizio Pol
 
 ## Use it/Work on it
 
-Creare una cartella con il nome del progetto/servizio, per esempio `pcn-helloworld2`
+Creare una cartella con il nome del progetto/servizio, per esempio `pcn-helloworldgo`
 ```
-mkdir pcn-helloworld2
-cd pcn-helloworld2
-go mod init pcn-helloworld2
+mkdir pcn-helloworldgo
+cd pcn-helloworldgo
+go mod init pcn-helloworldgo
 ```
-Creare il file dove scrivere il controlplane per esempio `helloworld2.go` e dentro importare la libreria 
+Creare il file dove scrivere il controlplane per esempio `helloworldgo.go` e dentro importare la libreria 
 ```
 pb "github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go" // pb stands for polycube
 ```
@@ -22,9 +22,9 @@ NOTA: il go.mod e il go.sum potrebbero fare riferimento ad una versione della li
 
 ```
 
-go mod init helloworld2
+go mod init helloworldgo
 go mod tidy
-go build helloworld2.go
+go build helloworldgo.go
 
 ```
 
@@ -42,15 +42,15 @@ export GOSUMDB=off
 
 Infine di nuovo
 ```
-go build helloworld2.go
+go build helloworldgo.go
 ```
 
 Se si vuole apportare qualche modifica al file proto, per aggiungere una nuova feature, bisogna rigenerare i file. Per qualsiasi dubbio qui c'è la documentazione [ufficiale](https://developers.google.com/protocol-buffers/docs/reference/go-generated
 )
 1. scaricare protobuf e grpc-go
 ```
-go get -u google.golang.org/protobuf/cmd/protoc-gen-go
-go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
+go get -d -u google.golang.org/protobuf/cmd/protoc-gen-go
+go get -d -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
 ```
 2. Potresti aver bisogno di esportare il PATH
 ```
@@ -70,3 +70,30 @@ replace "github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go" v
 ```
 
 
+
+
+
+NUOVO 24 02 2022
+
+1. occhio al gopath (da me è netgroup/go)
+2. segui qui https://grpc.io/docs/languages/go/quickstart/ e fai due go install per protoc-grn-go e protoc-gen-grpc 
+3. vai dentro polycube-grpc-go e dai il seguente comando
+```
+protoc --proto_path=../protos --go_out=commons --go_opt=paths=source_relative --go-grpc_out=commons --go-grpc_opt=paths=source_relative ../protos/polycube_grpc_commons.proto
+```
+
+
+
+
+# OSSERVATIONS
+
+* In this first version of the library, it is possible to create a cube with default configuration parameters. For example in the case of helloworld:
+
+```
+polycubectl helloworldgo h1 loglevel=trace span=true type=XDP_SKB shadow=true
+```
+But you can't set the action directly on cube creation, so you can't do something like that:
+```
+polycubectl helloworldgo h1 action=slowpath
+```
+This is to make the developer's life easier and not have to deal with configurations, json and more.
