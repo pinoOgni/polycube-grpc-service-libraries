@@ -31,11 +31,6 @@ type PolycubeClient interface {
 	Reload(ctx context.Context, in *Dataplane, opts ...grpc.CallOption) (*Empty, error)
 	DestroyCube(ctx context.Context, in *CubeManagement, opts ...grpc.CallOption) (*Bool, error)
 	CreateCube(ctx context.Context, in *CubeManagement, opts ...grpc.CallOption) (*Bool, error)
-	//
-	//====================================================================================================
-	//TODO OR MAYBE TODO
-	//====================================================================================================
-	SimpleUnaryMethod(ctx context.Context, in *ToPolycubed, opts ...grpc.CallOption) (*ToServiced, error)
 	// https://www.bouncybouncy.net/blog/bpf_map_get_next_key-pitfalls/
 	TableSet(ctx context.Context, in *ServicedToDataplaneRequest, opts ...grpc.CallOption) (*Bool, error)
 	TableGetAll(ctx context.Context, in *ServicedToDataplaneRequest, opts ...grpc.CallOption) (*MapValue, error)
@@ -120,15 +115,6 @@ func (c *polycubeClient) DestroyCube(ctx context.Context, in *CubeManagement, op
 func (c *polycubeClient) CreateCube(ctx context.Context, in *CubeManagement, opts ...grpc.CallOption) (*Bool, error) {
 	out := new(Bool)
 	err := c.cc.Invoke(ctx, "/commons.Polycube/CreateCube", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *polycubeClient) SimpleUnaryMethod(ctx context.Context, in *ToPolycubed, opts ...grpc.CallOption) (*ToServiced, error) {
-	out := new(ToServiced)
-	err := c.cc.Invoke(ctx, "/commons.Polycube/SimpleUnaryMethod", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -224,11 +210,6 @@ type PolycubeServer interface {
 	Reload(context.Context, *Dataplane) (*Empty, error)
 	DestroyCube(context.Context, *CubeManagement) (*Bool, error)
 	CreateCube(context.Context, *CubeManagement) (*Bool, error)
-	//
-	//====================================================================================================
-	//TODO OR MAYBE TODO
-	//====================================================================================================
-	SimpleUnaryMethod(context.Context, *ToPolycubed) (*ToServiced, error)
 	// https://www.bouncybouncy.net/blog/bpf_map_get_next_key-pitfalls/
 	TableSet(context.Context, *ServicedToDataplaneRequest) (*Bool, error)
 	TableGetAll(context.Context, *ServicedToDataplaneRequest) (*MapValue, error)
@@ -263,9 +244,6 @@ func (UnimplementedPolycubeServer) DestroyCube(context.Context, *CubeManagement)
 }
 func (UnimplementedPolycubeServer) CreateCube(context.Context, *CubeManagement) (*Bool, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCube not implemented")
-}
-func (UnimplementedPolycubeServer) SimpleUnaryMethod(context.Context, *ToPolycubed) (*ToServiced, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SimpleUnaryMethod not implemented")
 }
 func (UnimplementedPolycubeServer) TableSet(context.Context, *ServicedToDataplaneRequest) (*Bool, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TableSet not implemented")
@@ -398,24 +376,6 @@ func _Polycube_CreateCube_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PolycubeServer).CreateCube(ctx, req.(*CubeManagement))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Polycube_SimpleUnaryMethod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ToPolycubed)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PolycubeServer).SimpleUnaryMethod(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/commons.Polycube/SimpleUnaryMethod",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PolycubeServer).SimpleUnaryMethod(ctx, req.(*ToPolycubed))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -586,10 +546,6 @@ var Polycube_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateCube",
 			Handler:    _Polycube_CreateCube_Handler,
-		},
-		{
-			MethodName: "SimpleUnaryMethod",
-			Handler:    _Polycube_SimpleUnaryMethod_Handler,
 		},
 		{
 			MethodName: "TableSet",

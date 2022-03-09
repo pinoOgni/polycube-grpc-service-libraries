@@ -6,7 +6,7 @@
 		cioè a fare una cosa del tipo
 			var r = reflect.TypeOf(i).Kind()
 			fmt.Printf("Other:%v\n", r)
-			
+
 			f, ok := i.(r)
 			fmt.Println(f, ok)
 		solo che ora come ora mi dice ./prog.go:13:12: r is not a type
@@ -14,7 +14,7 @@
 	* type switch https://go.dev/doc/effective_go#type_switch
 	* kind https://pkg.go.dev/reflect#Kind
 	* qui capisci come lavora una goroutine https://go.dev/play/p/8VE3KBa1Pkn
-	
+
 
 	* go routine wait https://go.dev/tour/concurrency/5
 	* https://go.dev/play/p/S98GjeaGBX0
@@ -33,63 +33,94 @@
 	* https://pkg.go.dev/net/url
 	* https://golangbyexample.com/parse-url-golang/
 
+
+	OCCHIO
+	* https://github.com/liqotech/liqo/blob/119018e0ec725c1e8f7f4146494d19d2ca948088/cmd/liqo-webhook/main.go#L31
 */
 
-
-
-package polycube_grpc_go 
+package polycube_grpc_go
 
 import (
+	"bytes"
 	context "context"
+	"encoding/binary"
 	"fmt"
-	"log"
-	"math/rand"
-	"time"
-	"unsafe"
-	"net/http"
-	"strings"
+	"github.com/pinoOgni/urlpath"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
-	"github.com/go-chi/chi/v5"
-	"bytes"
-	"encoding/binary"
+	"log"
+	"math/rand"
+	"strings"
 	"sync"
-	"github.com/pinoOgni/urlpath"
+	"time"
+	"unsafe"
+	"io/ioutil"
+	"encoding/json"
+	"strconv"
 )
 
 const (
 	address     = "127.0.0.1:9001"
 	defaultName = "world"
-	uuid_seed = 9999
-	base_url = "/polycube/v1/"
+	uuid_seed   = 9999
+	base_url    = "/polycube/v1/"
 )
 
-var DebugServiceName string = "helloworldgo"
+// used for debugging, remove them later (pinoOgni)
+var DebugServiceName string = "helloworldgo" // router
 var DebugUuid int32 = 3153
-var DebugCubeName string = "h1"
+var DebugCubeName string = "h1"        // r1
 var DebugMapName string = "action_map" // routing_table
 
-type key struct {
-	templateUrl  string
-	httpVerb string
+
+/*
+	This structure represents the abse confguration for the creation of a cube of a generic service
+	In particular:
+		* Loglevel: trace, debug, info, warning, error, critical
+		* Shadow: true, false (only for standard cubes)
+		* Span: true, false (only for standard cubes)
+		* Type: TC, XDP_SKB, XDP_DRV
+
+	For a more detailed description, refer to the Polycube documentation.
+*/
+type BaseConf struct {
+	Loglevel string
+	Shadow   bool
+	Span     bool
+	Type     string
 }
+
+/*
+	Struct used within the method map
+*/
+type key struct {
+	templateUrl string
+	httpVerb    string
+}
+
+/*
+ 	This map is used to keep track of all the methods of the controlplane to which a key is associated
+	 given by the set of the url template (i.e. the generic url) and by the HTTP verb
+*/
 var methods_map = make(map[key]func(ToServiced) ToPolycubed)
 
-
-
-//     auto tableGetReply = polycube.TableGet("router", 1111, "r1", "routing_table", program_type,key_pass,sizeof(key),sizeof(value));
+/*
+	Represents a handler to a method that will be implemented by the developer in the controlplane
+	(therefore specific for service) and that is used at the time of a request from the dataplane to
+	the controlplane (example: arrival of a packet and print)
+*/
+var packet_in func(ToServiced)
 
 /*
 	This representes the Long lived polycube client with all the field that we need
 */
 type LonglivedPolycubeClient struct {
-	client PolycubeClient   // it represents the Polycube Client implementation
-	conn *grpc.ClientConn  // simple grpc connection (used to create the client)
+	client PolycubeClient           // it represents the Polycube Client implementation
+	conn   *grpc.ClientConn         // simple grpc connection (used to create the client)
 	stream Polycube_SubscribeClient // the stream, i.e. the long lived stream between the client and the server
-	ctx context.Context  // context used fo in the Subscribe method
-	router *chi.Mux
+	ctx    context.Context          // context used fo in the Subscribe method
 }
 
 /*
@@ -100,7 +131,6 @@ type LonglivedPolycubeClient struct {
 */
 var TheClient *LonglivedPolycubeClient
 
-
 /*
 	Thi represents the Serviced with the service name and the uuid, in this way, the developer
 	needs to choose only the service name when the Subscribe method is called and so
@@ -108,8 +138,10 @@ var TheClient *LonglivedPolycubeClient
 */
 type Serviced struct {
 	serviceName string
-	uuid int32
+	uuid        int32
+	serviceType ServicedInfo_ServiceType
 }
+
 /*
 	client parameters used to set some timeouts in the client
 	almost the same parameters are setted in the server
@@ -119,10 +151,9 @@ var TheServiced Serviced
 
 var kacp = keepalive.ClientParameters{
 	Time:                5 * time.Second, // send pings every 10 seconds if there is no activity
-	Timeout:             5 * time.Second,      // wait 1 second for ping ack before considering the connection dead
-	PermitWithoutStream: true,             // send pings even without active streams
+	Timeout:             5 * time.Second, // wait 1 second for ping ack before considering the connection dead
+	PermitWithoutStream: true,            // send pings even without active streams
 }
-
 
 /*
   ====================================================================================================
@@ -133,8 +164,6 @@ var kacp = keepalive.ClientParameters{
   ====================================================================================================
 */
 
-
-
 /*
 	This method is used to create a PolycubeClient, setting all the things required by
 	gRPC to make the connection bewteen the client and the server
@@ -142,87 +171,106 @@ var kacp = keepalive.ClientParameters{
 	Note: a single method could be created where the client was created and the Polycubed subscription was made.
 	Two methods were preferred to keep things separate.
 */
-func CreatePolycubeClient(){
+func CreatePolycubeClient() bool {
 
-	fmt.Println("1")
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithKeepaliveParams(kacp))
-	fmt.Println("2")
 	if err != nil {
-		log.Printf("did not connect: %v", err)
+		fmt.Println("Did not connect ", err)
+		return false
 	} else {
-		fmt.Println("connected")
+		fmt.Println("Connected")
+		TheClient = &LonglivedPolycubeClient{
+			client: NewPolycubeClient(conn), // method of auto-generated library
+			conn:   conn,
+			stream: nil,
+			ctx:    context.Background(),
+		}
+		if TheClient == nil {
+			return false
+		} else {
+			return true
+		}
 	}
 
 	// pino: TODO OCCHIO, non so se metterla o no
 	// defer conn.Close()
 
-	TheClient = &LonglivedPolycubeClient{
-		client: NewPolycubeClient(conn), // method of auto-generated library
-		conn:   conn,
-		stream: nil,
-		ctx: context.Background(),
-		router: chi.NewRouter(),
-	} 
-	
 }
 
-
-
 /*
-	This method is used to make a subscription of the client (Serviced) to the 
+	This method is used to make a subscription of the client (Serviced) to the
 	server (Polycubed). It creates the long-lived stream which will live for the entire
 	life of the Serviced and where ToPolycubed and ToServiced messages are exchanged
 
 */
 // pino: TODO maybe the subscribe method needs to return a bool value
-func Subscribe(service_name string) {
+func Subscribe(service_name string, service_type ServicedInfo_ServiceType) bool {
 
 	// Background returns a non-nil, empty Context. It is never canceled, has no values,
-	// and has no deadline. It is typically used by the main function, initialization, 
-	// and tests, and as the top-level Context for incoming requests. 
-	
+	// and has no deadline. It is typically used by the main function, initialization,
+	// and tests, and as the top-level Context for incoming requests.
+
 	stream, err := TheClient.client.Subscribe(TheClient.ctx)
 	TheClient.stream = stream
 	if err != nil {
 		log.Printf("Subscribe, error creating stream: %v", err)
+		return false
 	}
-	
+
 	// the service_name is saved internally so the developer does not need to write every time
-	TheServiced.serviceName = service_name 
-	
+	TheServiced.serviceName = service_name
+	TheServiced.serviceType = service_type
+
+	// only standard cube have the concept of set peer
+	// using the SetPeerUserRequest we can setting a peer and the developer of the controlpane
+	// does not care about it
+	if service_type == ServicedInfo_STANDARD {
+		RegisterHandlerPatch(":cubeName/ports/:portName/peer/", SetPeerUserRequest)
+	}
+	// pino: TODO register path for createcube and destroycube
+
 	// creation of the uuid
 	rand.Seed(time.Now().UnixNano())
 	TheServiced.uuid = rand.Int31n(uuid_seed)
-	
+
 	// cube_name := "cube_name"
-	request := &ToPolycubed {ServicedInfo: &ServicedInfo{ServiceName: TheServiced.serviceName , Uuid: TheServiced.uuid}, ToPolycubed: &ToPolycubed_Subscribe {Subscribe: true}}
-	
+	request := &ToPolycubed{ServicedInfo: &ServicedInfo{ServiceName: TheServiced.serviceName, ServiceType: &TheServiced.serviceType, Uuid: TheServiced.uuid}, ToPolycubed: &ToPolycubed_Subscribe{Subscribe: true}}
+
 	if err := stream.Send(request); err != nil {
 		log.Printf("error sending on stream: %v", err)
+		return false
 	}
 
 	fmt.Println("CIAO ", request.ServicedInfo.ServiceName)
 	fmt.Println("CIAO ", request.ServicedInfo.Uuid)
+	fmt.Println("CIAO ", request.ServicedInfo.ServiceType)
 	fmt.Println("CIAO ", request.ToPolycubed)
 	fmt.Println("unsafe.Sizeof(request) ", unsafe.Sizeof(request))
+
+	// we wait 4 seconds to give Polycube time to set up
+	// everything necessary for the new service
+	time.Sleep(4 * time.Second)
+
+	// if we are here, everything is ok
+	return true
 }
 
 /*
 	This method is used to unsubscribe from the service
 */
 // pino: TODO maybe the unsubscribe method needs to return a bool value
-func Unsubscribe() {
+func Unsubscribe() bool {
 	ctx := context.Background()
-	request := &ServicedInfo{ServiceName: TheServiced.serviceName , Uuid: TheServiced.uuid}
+	request := &ServicedInfo{ServiceName: TheServiced.serviceName, Uuid: TheServiced.uuid}
 	reply, err := TheClient.client.Unsubscribe(ctx, request)
 	if err != nil {
-		log.Printf("could not greet: %v", err)
+		log.Printf("Unsubscribe failed: %v", err)
+		return false
 	}
 	log.Printf("Reply from Unsubscribe: %s", reply.GetStatus())
+	return reply.GetStatus()
 }
-
-
 
 /*
   ====================================================================================================
@@ -233,13 +281,10 @@ func Unsubscribe() {
   ====================================================================================================
 */
 
-
-
-
 /*
-	This method is used to read the long lived stream waiting for a request 
+	This method is used to read the long lived stream waiting for a request
 	(a ToServiced message) from Polycubed to arrive.
-	After reading the request and understanding what type it is, 
+	After reading the request and understanding what type it is,
 	it will call the correct method based on the registration made at the beginning
 
 	// pino: TODO
@@ -247,16 +292,17 @@ func Unsubscribe() {
 	OSSIA NEL MAIN.GO
 
 	This method can be called in two ways from the controlplane:
-	1. as a call to a normal method, therefore of the type pb.ReadTheStream () and after 
-	this call the controlplane will do nothing but wait for some request from the user 
+	1. as a call to a normal method, therefore of the type pb.ReadTheStream () and after
+	this call the controlplane will do nothing but wait for some request from the user
 	(precisely by reading from the stream)
-	2. as goroutine and in that case the controlpalne will be able to do anything else 
-	while the thread is in charge of reading the stream. Beware, however, that if the method 
-	that called the goroutine or the main terminates, the launched goroutine also terminates, 
+	2. as goroutine and in that case the controlpalne will be able to do anything else
+	while the thread is in charge of reading the stream. Beware, however, that if the method
+	that called the goroutine or the main terminates, the launched goroutine also terminates,
 	so the developer will have to handle this case.
 */
 func ReadTheStreamGoRoutine(wg *sync.WaitGroup) {
 	reply := ToPolycubed{}
+	fmt.Println("Waiting for something to read from the stream ....")
 	for {
 		request, err := TheClient.stream.Recv()
 		if err != nil {
@@ -264,7 +310,7 @@ func ReadTheStreamGoRoutine(wg *sync.WaitGroup) {
 			break
 		}
 		fmt.Println("Message from Polycubed ", request.GetServicedInfo().GetServiceName())
-	
+
 		// router logic with method call of the controlplane
 		if request.GetRestUserToServiceRequest() != nil {
 			fmt.Println("ToServiced_RestUserToServiceRequest ")
@@ -273,7 +319,7 @@ func ReadTheStreamGoRoutine(wg *sync.WaitGroup) {
 			fmt.Println("URL: ", requestUrl)
 			fmt.Println("VERB: ", requestHttpVerb)
 			for key, method := range methods_map {
-				match, ok := urlpath.MatchPath(key.templateUrl,requestUrl); 
+				match, ok := urlpath.MatchPath(key.templateUrl, requestUrl)
 				if ok == true && requestHttpVerb == key.httpVerb {
 					fmt.Println("the url is present in the method_map ")
 					cubeName := match.Params["cubeName"]
@@ -281,34 +327,45 @@ func ReadTheStreamGoRoutine(wg *sync.WaitGroup) {
 
 					portName := match.Params["portName"]
 					request.ServicedInfo.PortName = &portName
-					reply = method(*request)
 
+					// call the correct controlplane method
+					reply = method(*request)
 					break
 				}
 			}
+			// writing reply to Polycubed
 			TheClient.stream.Send(&reply)
 
 			/*
-			// pino: TODO testing a simple call ==> it works
-			var key uint32 = 0
-			var value uint8
-			r1 := TableGet("h1","action_map",CubeInfo_INGRESS,key,unsafe.Sizeof(key),unsafe.Sizeof(value))
-			fmt.Println(r1)
-			
-			value = 2 // forward
-			r2 := TableSet("h1","action_map",CubeInfo_INGRESS,key,unsafe.Sizeof(key),value,unsafe.Sizeof(value))
-			fmt.Println(r2)  // should be true
-			
-			r3 := TableGet("h1","action_map",CubeInfo_INGRESS,key,unsafe.Sizeof(key),unsafe.Sizeof(value))
-			fmt.Println(r3)
+				// pino: TODO testing a simple call ==> it works
+				var key uint32 = 0
+				var value uint8
+				r1 := TableGet("h1","action_map",CubeInfo_INGRESS,key,unsafe.Sizeof(key),unsafe.Sizeof(value))
+				fmt.Println(r1)
+
+				value = 2 // forward
+				r2 := TableSet("h1","action_map",CubeInfo_INGRESS,key,unsafe.Sizeof(key),value,unsafe.Sizeof(value))
+				fmt.Println(r2)  // should be true
+
+				r3 := TableGet("h1","action_map",CubeInfo_INGRESS,key,unsafe.Sizeof(key),unsafe.Sizeof(value))
+				fmt.Println(r3)
 			*/
+		} else if request.GetDataplaneToServicedPacket() != nil {
+			fmt.Println("hello")
+			packet_in(*request)
+		} else if request.GetDataplaneToServicedRequest() != nil {
+			/*
+				Still to be implemented, the message has been created in the proto to represent the case of the dataplane 
+				requesting something from the service, i.e. the call of a control plane method by the data plane
+			*/
+			fmt.Println("GetDataplaneToServicedRequest")
+		} else {
+			fmt.Println("ERROR: message case not implemented!")
 		}
-	
+		fmt.Println("Waiting for something to read from the stream ....")
 	}
 	wg.Done()
 }
-
-
 
 func ReadTheStream() {
 	for {
@@ -321,26 +378,20 @@ func ReadTheStream() {
 	}
 }
 
-
-
 /*
-		reply := &ToPolycubed {
-			ServicedInfo: &ServicedInfo{
-						ServiceName: TheServiced.serviceName , 
-						Uuid: TheServiced.uuid}, 
-						ToPolycubed: &ToPolycubed_ServicedToRestUserReply {
-							ServicedToRestUserReply: &ServicedToRestUserReply {
-								Success: true,
-							},
+	reply := &ToPolycubed {
+		ServicedInfo: &ServicedInfo{
+					ServiceName: TheServiced.serviceName ,
+					Uuid: TheServiced.uuid},
+					ToPolycubed: &ToPolycubed_ServicedToRestUserReply {
+						ServicedToRestUserReply: &ServicedToRestUserReply {
+							Success: true,
 						},
-					}
-		TheClient.stream.Send(reply)
+					},
+				}
+	TheClient.stream.Send(reply)
 
 */
-
-
-
-
 
 /*
   ====================================================================================================
@@ -348,26 +399,41 @@ func ReadTheStream() {
   ====================================================================================================
 */
 
-
-
 /*
-	This method is used to make a request to create a cube to Polycubed. 
-	
+	This method is used to make a request to create a cube to Polycubed.
+
 	// pino: TODO
 	To implement
-		* extract other information from the conf and not just the name 
+		* extract other information from the conf and not just the name
 		(which is not taken from the conf) such as the type of cube, if it is shadow or not ...
+
+	Question: Why is the userRequest needed and this method must be called from the Control Plane?
+	Answer: because the Control Plane has to understand and manage the creation and destruction of a cube 
+	(Example: vector with names of the cubes)	
 */
-func CreateCube(cube_name string, ingress_code string, egress_code, conf string) *Bool {
+func CreateCube(userRequest ToServiced, ingress_code string, egress_code string) *Bool {
 	// ctx := context.Background()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// request := &CubeManagement{CubeName: cube_name, ServiceName: &TheServiced.serviceName}
 	request := CubeManagement{}
-	request.CubeName = cube_name
+	request.CubeName = userRequest.GetServicedInfo().GetCubeName()
 	request.ServiceName = &TheServiced.serviceName
 	request.Uuid = &TheServiced.uuid
+
+	// it is a little bit strange but we need to convert from servicedInfo serviceType
+	// to cubemanagement servicetype in order to give to polycube the correct service type
+	// yes, we can mantain this info in the server but for now this is ok
+	if TheServiced.serviceType == 0 {
+		serviceType := CubeManagement_STANDARD
+		request.ServiceType = &serviceType
+	} else {
+		serviceType := CubeManagement_TRANSPARENT
+		request.ServiceType = &serviceType
+	}
+	// represents the basis of the configuration of a service with fields common to all services
+	conf := GetBaseConf(userRequest)
 	request.Conf = &conf
 	request.IngressCode = &ingress_code
 	request.EgressCode = &egress_code
@@ -381,12 +447,31 @@ func CreateCube(cube_name string, ingress_code string, egress_code, conf string)
 }
 
 
+func GetBaseConf(userRequest ToServiced) string {
+	cube_name := userRequest.GetServicedInfo().GetCubeName()
+	request_body := userRequest.GetRestUserToServiceRequest().GetRequestBody()
 
+	var baseConf BaseConf
+	var stringBaseConf string
+	json.Unmarshal([]byte(request_body), &baseConf)
+	if baseConf.Loglevel == "" {
+		baseConf.Loglevel = "INFO"
+	}
+	if baseConf.Type == "" {
+		baseConf.Type = "TC"
+	}
+	if TheServiced.serviceType == 0 { 
+		stringBaseConf = `{"name":"` + cube_name + `","type":"` + baseConf.Type +  `","loglevel":"` + baseConf.Loglevel + `","shadow":` + strconv.FormatBool(baseConf.Shadow) + `,"span":` + strconv.FormatBool(baseConf.Span) +`}`
+	} else if TheServiced.serviceType == 1 {
+		stringBaseConf = `{"name":"` + cube_name + `","type":"` + baseConf.Type +  `","loglevel":"` + baseConf.Loglevel + `"}`
+	}
+	return stringBaseConf
+}
 
 // pino: TODO
 /*
-	in the grpc-go examples, in unary requests, a context is done with withtimeout, 
-	with 1 or 10 seconds. My question is, is it wrong to create a context that always 
+	in the grpc-go examples, in unary requests, a context is done with withtimeout,
+	with 1 or 10 seconds. My question is, is it wrong to create a context that always
 	lives with Background? Once you exit the Unary method, isn't it automatically deleted?
 */
 /*
@@ -412,16 +497,6 @@ func DestroyCube(cube_name string) *Bool {
 	return reply
 }
 
-
-
-
-
-
-
-
-
-
-
 /*
   ====================================================================================================
                                         PORT MANAGEMENT
@@ -431,8 +506,6 @@ func DestroyCube(cube_name string) *Bool {
   ====================================================================================================
 */
 
-
-
 /*
   This method is used to add a port to a cube. The concept of a door and
   therefore of adding a door is different from adding a value to a map of a
@@ -440,16 +513,15 @@ func DestroyCube(cube_name string) *Bool {
   that exist. This is why this method was created.
 */
 func SetPort(cube_name string, port_name string) *Bool {
-	ctx := context.Background()	
+	ctx := context.Background()
 	request := ServicedToDataplaneRequest{}
-	request.ServicedInfo = &ServicedInfo {
-			ServiceName: TheServiced.serviceName,
-			Uuid: TheServiced.uuid,
+	request.ServicedInfo = &ServicedInfo{
+		ServiceName: TheServiced.serviceName,
+		Uuid:        TheServiced.uuid,
 	}
-	request.CubeInfo = &CubeInfo {
+	request.CubeInfo = &CubeInfo{
 		CubeName: cube_name,
 	}
-
 
 	request.RequestType = &ServicedToDataplaneRequest_Port{
 		Port: &Port{
@@ -466,9 +538,6 @@ func SetPort(cube_name string, port_name string) *Bool {
 	return reply
 }
 
-
-
-
 /*
   This method is used to remove a port to a cube. The concept of a door and
   therefore of adding a door is different from adding a value to a map of a
@@ -476,16 +545,15 @@ func SetPort(cube_name string, port_name string) *Bool {
   that exist. This is why this method was created.
 */
 func DelPort(cube_name string, port_name string) *Bool {
-	ctx := context.Background()	
+	ctx := context.Background()
 	request := ServicedToDataplaneRequest{}
-	request.ServicedInfo = &ServicedInfo {
-			ServiceName: TheServiced.serviceName,
-			Uuid: TheServiced.uuid,
+	request.ServicedInfo = &ServicedInfo{
+		ServiceName: TheServiced.serviceName,
+		Uuid:        TheServiced.uuid,
 	}
-	request.CubeInfo = &CubeInfo {
+	request.CubeInfo = &CubeInfo{
 		CubeName: cube_name,
 	}
-
 
 	request.RequestType = &ServicedToDataplaneRequest_Port{
 		Port: &Port{
@@ -502,23 +570,23 @@ func DelPort(cube_name string, port_name string) *Bool {
 	return reply
 }
 
-
-
 /*
   This method is used to set a peer for a given port
+  This method is called directly by the SetPeerUserRequest method which is present in the library and not by the control plane,
+  but it was done for future versions of the library (example, you change the method to read the stream and you want to use the
+	SetPeer method in the controlplane for one specific service)
 */
 
 func SetPeer(cube_name string, port_name string, peer_name string) *Bool {
-	ctx := context.Background()	
+	ctx := context.Background()
 	request := ServicedToDataplaneRequest{}
-	request.ServicedInfo = &ServicedInfo {
-			ServiceName: TheServiced.serviceName,
-			Uuid: TheServiced.uuid,
+	request.ServicedInfo = &ServicedInfo{
+		ServiceName: TheServiced.serviceName,
+		Uuid:        TheServiced.uuid,
 	}
-	request.CubeInfo = &CubeInfo {
+	request.CubeInfo = &CubeInfo{
 		CubeName: cube_name,
 	}
-
 
 	request.RequestType = &ServicedToDataplaneRequest_Port{
 		Port: &Port{
@@ -536,7 +604,79 @@ func SetPeer(cube_name string, port_name string, peer_name string) *Bool {
 	return reply
 }
 
+/*
+	This method is simply to make a call to the SetPeer method
 
+	Logical operation of setting up a peer:
+	1. The user executes the command "polycubectl nameServiceNameCube portsNamePort set peer=namePeer"
+	2. The request goes through the rest server and arrives at the grpc server (to the dispatcher method)
+	3. A ToServiced message is created and written to the stream
+	4. The request arrives at the service and is intercepted by the library (by the ReadTheStream or ReadTheStreamGoRoutine method)
+	5. The library itself makes a request to Polycube at the SetPeer endpoint of the grpc method
+
+	This "double" request has been chosen (ie user -> Polycubed -> Service -> Polycubed) so that the Service is updated with the peer settings
+*/
+func SetPeerUserRequest(request ToServiced) ToPolycubed {
+	cube_name := request.GetServicedInfo().GetCubeName()
+	port_name := request.GetServicedInfo().GetPortName()
+	var peer_name string
+	// here, I'm sure that in the request body there is the peer name
+	if len(request.GetRestUserToServiceRequest().GetRequestBody()) > 0 {
+		peer_name = request.GetRestUserToServiceRequest().GetRequestBody()
+		peer_name = peer_name[1 : len(peer_name)-1]
+	} else {
+		peer_name = " "
+	}
+
+	
+	setPeerReply := SetPeer(cube_name, port_name, peer_name)
+	if setPeerReply.GetStatus() == true {
+		return SetToPolycubedReply(true, `{"message":"Peer setted"}`)
+	} else {
+		return SetToPolycubedReply(false, `{"message":"Problem while setting peer"}`)
+	}
+}
+
+
+/*
+  ====================================================================================================
+										MESSAGE SETTING MANAGEMENT
+	* func SetToPolycubedReply(success bool, message string) ToPolycubed 
+	* func SetTableServicedToDataplaneRequest(cube_name string, map_name string, program_type CubeInfo_ProgramType) ServicedToDataplaneRequest 
+  ====================================================================================================
+*/
+
+
+/*
+	Simple method to populate a ToPolycubed message where the only important
+	fields are Subscribe and Message
+*/
+func SetToPolycubedReply(success bool, message string) ToPolycubed {
+	ret_reply := ToPolycubed{
+		ToPolycubed: &ToPolycubed_ServicedToRestUserReply{
+			ServicedToRestUserReply: &ServicedToRestUserReply{
+				Success: success,
+				Message: &message,
+			},
+		},
+	}
+	return ret_reply
+}
+
+
+func SetTableServicedToDataplaneRequest(cube_name string, map_name string, program_type CubeInfo_ProgramType) ServicedToDataplaneRequest {
+	request := ServicedToDataplaneRequest{}
+	request.ServicedInfo = &ServicedInfo{
+		ServiceName: TheServiced.serviceName,
+		Uuid:        TheServiced.uuid,
+	}
+	request.CubeInfo = &CubeInfo{
+		CubeName:    cube_name,
+		MapName:     map_name,
+		ProgramType: program_type,
+	}
+	return request
+}
 
 
 
@@ -544,7 +684,7 @@ func SetPeer(cube_name string, port_name string, peer_name string) *Bool {
 /*
   ====================================================================================================
                                         EBPF MAPS MANAGEMENT
-	* func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value_size uintptr) interface{} 
+	* func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value_size uintptr) interface{}
 	* func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value interface{}, value_size uintptr) *Bool
 	* func TableRemove(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr) *Bool
 
@@ -554,30 +694,20 @@ func SetPeer(cube_name string, port_name string, peer_name string) *Bool {
   ====================================================================================================
 */
 
-
 /*
   Given a key, this method is used to ask Polycube for data from an eBPF map of
   a cube
 */
-func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value_size uintptr) * MapValue {
-	ctx := context.Background()	
-	request := ServicedToDataplaneRequest{}
-	request.ServicedInfo = &ServicedInfo {
-			ServiceName: TheServiced.serviceName,
-			Uuid: TheServiced.uuid,
-	}
-	request.CubeInfo = &CubeInfo {
-		CubeName: cube_name,
-		MapName: map_name,
-		ProgramType: program_type,
-	}
+func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value_size uintptr) *MapValue {
+	ctx := context.Background()
+	request := SetTableServicedToDataplaneRequest(cube_name,map_name,program_type)
 	fmt.Println("key_size ", key_size)
 	fmt.Println("value_size ", value_size)
 
 	fmt.Println("TABLEGET ", key)
 	key_bytes := new(bytes.Buffer)
 	if ret, ok := key.(interface{}); ok {
-		
+
 		err := binary.Write(key_bytes, binary.LittleEndian, ret)
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
@@ -586,53 +716,51 @@ func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	} else {
 		fmt.Println("nooooooooo")
 	}
-	
 
-/*
-	switch v := key.(type) {
-		case nil:
-			fmt.Println("x is nil", v)           // here v has type interface{}
-		case uint32: 
-			ret, ok := key.(uint32)
-			buf.Write([]byte{ret})
-			
-			fmt.Println("x is", v)
-			fmt.Println("x is", ret)
-			fmt.Println("x is", ok)             // here v has type int
-		case bool:
-			fmt.Println("x is bool", v) 			// here v has type interface{}
-		case string:
-			fmt.Println("x is string", v)			// here v has type interface{}
-		default:
-			fmt.Println("type unknown", v)        // here v has type interface{}
-	}
-	*/
-	
 	/*
-	var real_key []byte
-	if ret, ok := key.([]byte); ok {
-		fmt.Println("yeeeeee", ret)
-	} else {
-		fmt.Println("nooooooooo")
-	}
-	
+		switch v := key.(type) {
+			case nil:
+				fmt.Println("x is nil", v)           // here v has type interface{}
+			case uint32:
+				ret, ok := key.(uint32)
+				buf.Write([]byte{ret})
+
+				fmt.Println("x is", v)
+				fmt.Println("x is", ret)
+				fmt.Println("x is", ok)             // here v has type int
+			case bool:
+				fmt.Println("x is bool", v) 			// here v has type interface{}
+			case string:
+				fmt.Println("x is string", v)			// here v has type interface{}
+			default:
+				fmt.Println("type unknown", v)        // here v has type interface{}
+		}
+	*/
+
+	/*
+		var real_key []byte
+		if ret, ok := key.([]byte); ok {
+			fmt.Println("yeeeeee", ret)
+		} else {
+			fmt.Println("nooooooooo")
+		}
+
 	*/
 	b, ok := key.(interface{})
 	fmt.Println("\n -------------------------")
 	fmt.Println(ok)
 	fmt.Println(b)
 	fmt.Println("\n -------------------------")
-	
-	
+
 	// key_bytes := make([]byte, key_size)
 	// pino: TODO, per ora così
 	request.RequestType = &ServicedToDataplaneRequest_GetRequest{
-			GetRequest: &GetRequest{
-				All: false,
-				Key: key_bytes.Bytes(),
-				KeySize: uint64(key_size),
-				ValueSize: uint64(value_size),
-			},
+		GetRequest: &GetRequest{
+			All:       false,
+			Key:       key_bytes.Bytes(),
+			KeySize:   uint64(key_size),
+			ValueSize: uint64(value_size),
+		},
 	}
 	fmt.Println("TABLEGET ", []byte(fmt.Sprint(key)))
 	reply, err := TheClient.client.TableGet(ctx, &request)
@@ -644,28 +772,16 @@ func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	fmt.Println("unsafe.Sizeof(reply.ByteValues)) ", unsafe.Sizeof(reply.ByteValues))
 	fmt.Println("len(reply.ByteValues)) ", len(reply.ByteValues))
 
-
 	return reply
 }
-
-
 
 /*
   Given a key and a value, this method is used to request Polycube to write a
   data in an eBPF map of a cube
 */
 func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr, value interface{}, value_size uintptr) *Bool {
-	ctx := context.Background()	
-	request := ServicedToDataplaneRequest{}
-	request.ServicedInfo = &ServicedInfo {
-			ServiceName: TheServiced.serviceName,
-			Uuid: TheServiced.uuid,
-	}
-	request.CubeInfo = &CubeInfo {
-		CubeName: cube_name,
-		MapName: map_name,
-		ProgramType: program_type,
-	}
+	ctx := context.Background()
+	request := SetTableServicedToDataplaneRequest(cube_name,map_name,program_type)
 	fmt.Println("key_size ", key_size)
 	fmt.Println("value_size ", value_size)
 
@@ -682,13 +798,13 @@ func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	} else {
 		fmt.Println("nooooooooo")
 	}
-	
+
 	b_key, ok_key := key.(interface{})
 	fmt.Println("\n -------------------------")
 	fmt.Println(ok_key)
 	fmt.Println(b_key)
 	fmt.Println("\n -------------------------")
-	
+
 	value_bytes := new(bytes.Buffer)
 	if ret_value, ok_value := value.(interface{}); ok_value {
 		fmt.Println("value ret_value", ret_value)
@@ -701,17 +817,15 @@ func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 		fmt.Println("nooooooooo")
 	}
 
-	
-	
 	// key_bytes := make([]byte, key_size)
 	// pino: TODO, per ora così
 	request.RequestType = &ServicedToDataplaneRequest_SetRequest{
-			SetRequest: &SetRequest{
-				Key: key_bytes.Bytes(),
-				KeySize: uint64(key_size),
-				Value: value_bytes.Bytes(),
-				ValueSize: uint64(value_size),
-			},
+		SetRequest: &SetRequest{
+			Key:       key_bytes.Bytes(),
+			KeySize:   uint64(key_size),
+			Value:     value_bytes.Bytes(),
+			ValueSize: uint64(value_size),
+		},
 	}
 	fmt.Println("TABLESET ", []byte(fmt.Sprint(key)))
 	fmt.Println("TABLESET ", []byte(fmt.Sprint(value)))
@@ -724,30 +838,19 @@ func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	return reply
 }
 
-
-
 /*
   Given a key, this method is used to request Polycube to delete a data in an
   eBPF map of a cube
 */
 func TableRemove(cube_name string, map_name string, program_type CubeInfo_ProgramType, key interface{}, key_size uintptr) *Bool {
-	ctx := context.Background()	
-	request := ServicedToDataplaneRequest{}
-	request.ServicedInfo = &ServicedInfo {
-			ServiceName: TheServiced.serviceName,
-			Uuid: TheServiced.uuid,
-	}
-	request.CubeInfo = &CubeInfo {
-		CubeName: cube_name,
-		MapName: map_name,
-		ProgramType: program_type,
-	}
+	ctx := context.Background()
+	request := SetTableServicedToDataplaneRequest(cube_name,map_name,program_type)
 	fmt.Println("key_size ", key_size)
 
 	fmt.Println("TABLEREMOVE ", key)
 	key_bytes := new(bytes.Buffer)
 	if ret_key, ok_key := key.(interface{}); ok_key {
-		
+
 		err_key := binary.Write(key_bytes, binary.LittleEndian, ret_key)
 		if err_key != nil {
 			fmt.Println("binary.Write failed:", err_key)
@@ -756,22 +859,21 @@ func TableRemove(cube_name string, map_name string, program_type CubeInfo_Progra
 	} else {
 		fmt.Println("nooooooooo")
 	}
-	
+
 	b_key, ok_key := key.(interface{})
 	fmt.Println("\n -------------------------")
 	fmt.Println(ok_key)
 	fmt.Println(b_key)
 	fmt.Println("\n -------------------------")
-	
-	
+
 	// key_bytes := make([]byte, key_size)
 	// pino: TODO, per ora così
 	request.RequestType = &ServicedToDataplaneRequest_RemoveRequest{
-			RemoveRequest: &RemoveRequest{
-				All: false,
-				Key: key_bytes.Bytes(),
-				KeySize: uint64(key_size),
-			},
+		RemoveRequest: &RemoveRequest{
+			All:     false,
+			Key:     key_bytes.Bytes(),
+			KeySize: uint64(key_size),
+		},
 	}
 	fmt.Println("TABLEREMOVE", []byte(fmt.Sprint(key)))
 	reply, err := TheClient.client.TableRemove(ctx, &request)
@@ -782,10 +884,6 @@ func TableRemove(cube_name string, map_name string, program_type CubeInfo_Progra
 
 	return reply
 }
-
-
-
-
 
 /*
 
@@ -801,12 +899,10 @@ func TableRemove(cube_name string, map_name string, program_type CubeInfo_Progra
 
 */
 
-
 func RegisterHandler(path string, httpVerb string, handler func(ToServiced) ToPolycubed) {
 	templateUrl := base_url + TheServiced.serviceName + "/" + path
 	methods_map[key{templateUrl: templateUrl, httpVerb: strings.ToUpper(httpVerb)}] = handler
 }
-
 
 func RegisterHandlerGet(path string, handler func(ToServiced) ToPolycubed) {
 	templateUrl := base_url + TheServiced.serviceName + "/" + path
@@ -823,7 +919,6 @@ func RegisterHandlerDelete(path string, handler func(ToServiced) ToPolycubed) {
 	methods_map[key{templateUrl: templateUrl, httpVerb: "DELETE"}] = handler
 }
 
-
 func RegisterHandlerPatch(path string, handler func(ToServiced) ToPolycubed) {
 	templateUrl := base_url + TheServiced.serviceName + "/" + path
 	methods_map[key{templateUrl: templateUrl, httpVerb: "PATCH"}] = handler
@@ -834,66 +929,9 @@ func RegisterHandlerOptions(path string, handler func(ToServiced) ToPolycubed) {
 	methods_map[key{templateUrl: templateUrl, httpVerb: "OPTIONS"}] = handler
 }
 
-
-
-
-func Pino() {
-	prova := chi.NewRouter()
-	prova.Get("polycube/v1/{serviceName}/*", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("hellooooooooooooooooooooo")
-	})
-
-	url := "polycube/v1/router/*"
-	r, _ := http.NewRequest("POST", url, strings.NewReader(""))
-	
-	fmt.Println("Ciao ", r.URL)
-	fmt.Println("800A", chi.URLParam(r,"serviceName"))
+func RegisterHandlerPacketIn(handler func(ToServiced)) {
+	packet_in = handler
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 func sendMessage(stream Polycube_SubscribeClient, msg *ToPolycubed) error {
 	fmt.Printf("sending message %q\n", msg)
@@ -901,17 +939,16 @@ func sendMessage(stream Polycube_SubscribeClient, msg *ToPolycubed) error {
 }
 
 func recvMessage(wantErrCode codes.Code) {
-		res, err := TheClient.stream.Recv()
-		if status.Code(err) != wantErrCode {
-			log.Printf("TheClient.stream.Recv() = %v, %v; want _, status.Code(err)=%v", res, err, wantErrCode)
-		}
-		if err != nil {
-			fmt.Printf("TheClient.stream.Recv() returned expected error %v\n", err)
-			return
-		}
-		fmt.Printf("received message %q\n", res.GetServicedInfo().GetServiceName())
+	res, err := TheClient.stream.Recv()
+	if status.Code(err) != wantErrCode {
+		log.Printf("TheClient.stream.Recv() = %v, %v; want _, status.Code(err)=%v", res, err, wantErrCode)
+	}
+	if err != nil {
+		fmt.Printf("TheClient.stream.Recv() returned expected error %v\n", err)
+		return
+	}
+	fmt.Printf("received message %q\n", res.GetServicedInfo().GetServiceName())
 }
-
 
 func UniqueFunction() {
 
@@ -928,16 +965,16 @@ func UniqueFunction() {
 	// Initiate the stream with a context that supports cancellation.
 
 	// Background returns a non-nil, empty Context. It is never canceled, has no values,
-	//  and has no deadline. It is typically used by the main function, initialization, 
-	// and tests, and as the top-level Context for incoming requests. 
+	//  and has no deadline. It is typically used by the main function, initialization,
+	// and tests, and as the top-level Context for incoming requests.
 	ctx := context.Background()
-	
+
 	stream, err := c.Subscribe(ctx)
 	if err != nil {
 		log.Printf("error creating stream: %v", err)
 	}
 	ciao := "cubo"
-	request := &ToPolycubed {ServicedInfo: &ServicedInfo{ServiceName: "NOME", Uuid: 1111111, CubeName: &ciao }, ToPolycubed: &ToPolycubed_Subscribe {Subscribe: true}}
+	request := &ToPolycubed{ServicedInfo: &ServicedInfo{ServiceName: "NOME", Uuid: 1111111, CubeName: &ciao}, ToPolycubed: &ToPolycubed_Subscribe{Subscribe: true}}
 	// Send some test messages.
 	if err := sendMessage(stream, request); err != nil {
 		log.Printf("error sending on stream: %v", err)
@@ -946,5 +983,21 @@ func UniqueFunction() {
 	for {
 
 	}
-	
+
+}
+
+
+
+/*
+	So, it is used to obtain a string given the name of a file that contains the dataplane
+	code (eBPF) of the new service. Once this is achieved, the string can be passed to the
+	CreateCube method of the polycube-grpc-go library
+*/
+
+func GetDataplaneCode(filename string) string {
+	b, err := ioutil.ReadFile(filename)
+	if err != nil {
+		fmt.Print(err)
+	}
+	return string(b)
 }
