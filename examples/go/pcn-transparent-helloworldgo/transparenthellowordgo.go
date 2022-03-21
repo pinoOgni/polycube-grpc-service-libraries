@@ -75,7 +75,7 @@ func first(a string, b string) string {
 */
 func GetIngressAction(request pb.ToServiced) pb.ToPolycubed {
 
-	// pino: TODO // the key is setted by the controlplane? In this case yes, but in others?
+	// (pinoOgni) TODO // the key is setted by the controlplane? In this case yes, but in others?
 	var key uint32 = 0
 	var value uint8
 	fmt.Println("request.GetServicedInfo().GetCubeName() ", request.GetServicedInfo().GetCubeName())
@@ -104,7 +104,7 @@ func GetIngressAction(request pb.ToServiced) pb.ToPolycubed {
 */
 func GetEgressAction(request pb.ToServiced) pb.ToPolycubed {
 
-	// pino: TODO // the key is setted by the controlplane? In this case yes, but in others?
+	// (pinoOgni) TODO // the key is setted by the controlplane? In this case yes, but in others?
 	var key uint32 = 0
 	var value uint8
 	fmt.Println("request.GetServicedInfo().GetCubeName() ", request.GetServicedInfo().GetCubeName())
@@ -133,7 +133,6 @@ func GetEgressAction(request pb.ToServiced) pb.ToPolycubed {
 */
 func SetIngressAction(request pb.ToServiced) pb.ToPolycubed {
 	var action uint8
-	fmt.Println("ciao ciao ", request.GetRestUserToServiceRequest().GetRequestBody())
 	actionString := request.GetRestUserToServiceRequest().GetRequestBody()
 	switch {
 	case actionString == `"drop"`:
@@ -167,7 +166,6 @@ func SetIngressAction(request pb.ToServiced) pb.ToPolycubed {
 */
 func SetEgressAction(request pb.ToServiced) pb.ToPolycubed {
 	var action uint8
-	fmt.Println("ciao ciao ", request.GetRestUserToServiceRequest().GetRequestBody())
 	actionString := request.GetRestUserToServiceRequest().GetRequestBody()
 	switch {
 	case actionString == `"drop"`:
@@ -277,7 +275,7 @@ func HelpCommands(request pb.ToServiced) pb.ToPolycubed {
 
 
 func PacketIn(request pb.ToServiced){
-	fmt.Println("Packet in HelloworldGo")
+	fmt.Println("Packet in TransparentHelloworldGo")
 	cubeId := request.GetDataplaneToServicedPacket().GetCubeId()
 	portId := request.GetDataplaneToServicedPacket().GetPortId()
 	fmt.Println("======= PACKET FROM " , cubeId, " and port: ", portId)

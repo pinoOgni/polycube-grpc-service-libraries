@@ -82,7 +82,7 @@ func main() {
 */
 func GetAction(request pb.ToServiced) pb.ToPolycubed {
 
-	// pino: TODO // the key is setted by the controlplane? In this case yes, but in others?
+	// pinoOgni: TODO the key is setted by the controlplane? In this case yes, but in others?
 	var key uint32 = 0
 	var value uint8
 	fmt.Println("request.GetServicedInfo().GetCubeName() ", request.GetServicedInfo().GetCubeName())
@@ -113,7 +113,6 @@ func GetAction(request pb.ToServiced) pb.ToPolycubed {
 */
 func SetAction(request pb.ToServiced) pb.ToPolycubed {
 	var action uint8
-	fmt.Println("ciao ciao ", request.GetRestUserToServiceRequest().GetRequestBody())
 	actionString := request.GetRestUserToServiceRequest().GetRequestBody()
 	actionString = actionString[1 : len(actionString)-1]
 	switch {
@@ -229,13 +228,12 @@ func UpdatePortsMap(request pb.ToServiced) pb.ToPolycubed {
 	}
 }
 
-// pino: TODO find a better solution to fill the ToPolycubed message
 func AddPorts(request pb.ToServiced) pb.ToPolycubed {
 	cube_name := request.GetServicedInfo().GetCubeName()
 	fmt.Println("AddPorts method")
 	if len(cubes[cube_name]) >= 2 {
 		fmt.Println("Maximum number of ports reached")
-		// pino: TODO the message is not displayed by the termianl of polycubectl
+		// (pinoOgni): TODO the message is not displayed by the terminal of polycubectl
 		return pb.SetToPolycubedReply(false,`{"message":"Maximum number of ports reached"}`)
 	}
 	port_name := request.GetServicedInfo().GetPortName()
@@ -258,7 +256,7 @@ func DelPort(request pb.ToServiced) pb.ToPolycubed {
 	fmt.Println("DelPort method")
 	if len(cubes[cube_name]) == 0 {
 		fmt.Println("There are no port to be deleted")
-		// pino: TODO the message is not displayed by the terminal of polycubectl
+		// (pinoOgni): TODO the message is not displayed by the terminal of polycubectl
 		return pb.SetToPolycubedReply(false,`{"message":"There are no port to be deleted"}`)
 	}
 
@@ -271,7 +269,7 @@ func DelPort(request pb.ToServiced) pb.ToPolycubed {
 	}
 	if pos == cap(cubes[cube_name]) {
 		fmt.Println("The port does not exists!")
-		// pino: TODO the message is not displayed by the terminal of polycubectl
+		// (pinoOgni): TODO the message is not displayed by the terminal of polycubectl
 		return pb.SetToPolycubedReply(false,`{"message":"The port does not exists!"}`)
 	}
 

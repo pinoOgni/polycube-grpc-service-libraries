@@ -27,15 +27,13 @@ var cubes = make(map[string][]string)
 
 func main() {
 
-	/*
-		====================================================================================================
-										CREATION OF POLYCUBE CLIENT
-		====================================================================================================
-	*/
-	/*
-		The first thing to do is to call this method. 
-		It is used to create a Polycube Client object
-	*/
+/*
+  ====================================================================================================
+                                        CREATION OF POLYCUBE CLIENT
+	The first thing to do is to call this method.
+	It is used to create a Polycube Client object
+  ====================================================================================================
+*/
 	client := pb.CreatePolycubeClient()
 
 	/*
@@ -46,39 +44,36 @@ func main() {
 		fmt.Println("CreatePolycubeClient error")
 		os.Exit(1)
 	}
-
-	/*
-		====================================================================================================
-										SUBSCRIBE
-			In this part we have to register the service with Polycube. 
-			The only two things to do are to decide a name and type of service (transparent or standard) 
-			and as before, check the return value of the Subscribe
-		====================================================================================================
-	*/
+/*
+  ====================================================================================================
+                                        SUBSCRIBE
+	In this part we have to register the service with Polycube.
+	The only two things to do are to decide a name and type of service (transparent or standard)
+	and as before, check the return value of the Subscribe 
+  ====================================================================================================
+*/
 	subscribe := pb.Subscribe("serviceName",pb.ServicedInfo_STANDARD)
 	if subscribe == false {
 		fmt.Println("Subscribe error")
 		os.Exit(1)
 	} 
-
-	
-	/*
-		====================================================================================================
-										GET DATAPLANE CODE
-			Here WE get the Data Plane code, using a library method that only needs the file name. 
-			It is valid for both the ingress and egress part.
-		====================================================================================================
-	*/
+/*
+  ====================================================================================================
+                                        GET DATAPLANE CODE
+	In this part we have to register the service with Polycube.
+	Here WE get the Data Plane code, using a library method that only needs the file name.
+	It is valid for both the ingress and egress part. 
+  ====================================================================================================
+*/
 	ingress = pb.GetDataplaneCode("Helloworldgo_dp_ingress.c")
 	egress = pb.GetDataplaneCode("Helloworldgo _dp_egress.c")
-
-	/*
-		====================================================================================================
-										ROUTE REGISTRATION: WORK IN PROGRESS
-				Here WE have to register the controlplane methods at each URL. 
-				It must be taken into account that the base url to start from is polycube/v1/ServiceName/
-		====================================================================================================
-	*/
+/*
+  ====================================================================================================
+                                        ROUTE REGISTRATION: WORK IN PROGRESS
+	Here WE have to register the controlplane methods at each URL.
+	It must be taken into account that the base url to start from is polycube/v1/ServiceName/ 
+  ====================================================================================================
+*/
 	/*
 		First, let's record the methods for creating and destroying a cube
 		These two methods must be implemented in the Control Plane in order to understand which 
@@ -99,16 +94,14 @@ func main() {
 		It is not linked to any url, so please pass in the name of the method that will be implemented here.
 	*/
 	pb.RegisterHandlerPacketIn(PacketIn)
-	
-
-	/*
-		====================================================================================================
-										READ THE STREAM GOROUTINE
-			Here a goroutine is launched, i.e. a light thread. 
-			The method used is called ReadTheStreamGoRoutine and is used to read the stream where requests from Polycube are written.
-			By running it as a thread you can do other things between launch and wait.
-		====================================================================================================
-	*/
+/*
+  ====================================================================================================
+                                        READ THE STREAM GOROUTINE
+	Here a goroutine is launched, i.e. a light thread.
+	The method used is called ReadTheStreamGoRoutine and is used to read the stream where requests from Polycube are written.
+	By running it as a thread you can do other things between launch and wait. 
+  ====================================================================================================
+*/	
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go pb.ReadTheStreamGoRoutine(&wg)
@@ -186,11 +179,10 @@ func GetAction(request pb.ToServiced) pb.ToPolycubed {
 func SetAction(request pb.ToServiced) pb.ToPolycubed {
 	return pb.ToPolycubed {}
 }
-
 /*
-  	====================================================================================================
-								WORK IN PROGRESS
- 	====================================================================================================
+  ====================================================================================================
+                                        WORK IN PROGRESS
+  ====================================================================================================
 */
 
 // (pinoOgni)

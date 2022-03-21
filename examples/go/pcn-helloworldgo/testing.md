@@ -3,7 +3,7 @@
 ## SUBSCRIBE AND UNSUBSCRIBE METHODS
 	
 pb.Subscribe("helloworldgo")
-fmt.Println("ciao")
+fmt.Println("Subscribe")
 time.Sleep(4*time.Second)
 pb.Unsubscribe()
 
@@ -12,9 +12,7 @@ pb.Unsubscribe()
 
 ingress := GetDataplaneCode("Helloworld_dp_ingress.c")
 egress := GetDataplaneCode("Helloworldgo_dp_egress.c")
-// pino: TODO, ora come ora è lo sviluppatore che deve configurare il proprio conf perché la libreria è generica
-conf := `{"name":"h1","type":"TC","loglevel":"INFO","shadow":false,"span":false,"action":"drop"}`
-pb.CreateCube("h1",ingress,egress,conf)
+create_cube_reply := pb.CreateCube(request, ingress, egress)
 time.Sleep(4*time.Second)
 pb.DestroyCube("h1")
 	
@@ -24,9 +22,7 @@ pb.DestroyCube("h1")
 pb.Subscribe("helloworldgo")
 ingress := GetDataplaneCode("Helloworldgo_dp_ingress.c")
 egress := GetDataplaneCode("Helloworldgo_dp_egress.c")
-// pino: TODO, ora come ora è lo sviluppatore che deve configurare il proprio conf perché la libreria è generica
-conf := `{"name":"h1","type":"TC","loglevel":"INFO","shadow":false,"span":false,"action":"drop"}`
-pb.CreateCube("h1",ingress,egress,conf)
+create_cube_reply := pb.CreateCube(request, ingress, egress)
 time.Sleep(4*time.Second)
 
 var key uint32 = 0
@@ -57,9 +53,7 @@ pb.Subscribe("helloworldgo")
 time.Sleep(4*time.Second)
 ingress := GetDataplaneCode("Helloworldgo_dp_ingress.c")
 egress := GetDataplaneCode("Helloworldgo_dp_egress.c")
-// pino: TODO, ora come ora è lo sviluppatore che deve configurare il proprio conf perché la libreria è generica
-conf := `{"name":"h1","type":"TC","loglevel":"INFO","shadow":false,"span":false,"action":"drop"}`
-pb.CreateCube("h1",ingress,egress,conf)
+create_cube_reply := pb.CreateCube(request, ingress, egress)
 time.Sleep(4*time.Second)
 
 ret_set_port := pb.SetPort("h1","p1")
@@ -72,9 +66,7 @@ pb.Subscribe("helloworldgo")
 time.Sleep(4*time.Second)
 ingress := GetDataplaneCode("Helloworldgo_dp_ingress.c")
 egress := GetDataplaneCode("Helloworldgo_dp_egress.c")
-// pino: TODO, ora come ora è lo sviluppatore che deve configurare il proprio conf perché la libreria è generica
-conf := `{"name":"h1","type":"TC","loglevel":"INFO","shadow":false,"span":false,"action":"drop"}`
-pb.CreateCube("h1",ingress,egress,conf)
+create_cube_reply := pb.CreateCube(request, ingress, egress)
 time.Sleep(4*time.Second)
 
 ret_set_port := pb.SetPort("h1","p1")
@@ -91,9 +83,7 @@ pb.Subscribe("helloworldgo")
 time.Sleep(4*time.Second)
 ingress := GetDataplaneCode("Helloworldgo_dp_ingress.c")
 egress := GetDataplaneCode("Helloworldgo_dp_egress.c")
-// pino: TODO, ora come ora è lo sviluppatore che deve configurare il proprio conf perché la libreria è generica
-conf := `{"name":"h1","type":"TC","loglevel":"INFO","shadow":false,"span":false,"action":"drop"}`
-pb.CreateCube("h1",ingress,egress,conf)
+create_cube_reply := pb.CreateCube(request, ingress, egress)
 time.Sleep(4*time.Second)
 
 ret_set_port := pb.SetPort("h1","p1")

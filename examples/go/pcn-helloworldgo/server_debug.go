@@ -67,8 +67,6 @@ func (s *polycubeServer) Subscribe(stream pb.Polycube_SubscribeServer) error {
 			fmt.Println("err != nil")
 			return err
 		}
-		fmt.Println("ciao ", in.GetServicedInfo().GetServiceName())
-		fmt.Println("ciao ", in.GetServicedInfo().GetCubeName())
 
 		reply := &pb.ToServiced {ServicedInfo: &pb.ServicedInfo{ServiceName: "NOME", Uuid: 1111111}}
 
