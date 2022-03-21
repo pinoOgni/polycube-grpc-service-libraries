@@ -11,7 +11,7 @@ namespace polycubeclient {
   ====================================================================================================
 */
 
-// TODO pino: understand the use of CreateChannel, CreateCustomChannel,
+// (pinoOgni): TODO deep dive in the use of CreateChannel, CreateCustomChannel,
 // keepalive and channel in general
 PolycubeClient::PolycubeClient() {
   std::string target_str = target_ip + ":" + target_port;
@@ -38,32 +38,29 @@ PolycubeClient::PolycubeClient() {
   Polycube. Save the context and stream for future use. Basically it serves to
   set up a long-lived grpc
 */
+// (pinoOgni):: TODO the subscribe method needs to return a bool value
+
 void PolycubeClient::Subscribe(const std::string service_name,
                                const int32_t service_uuid) {
   this->service_name = service_name;
   this->service_uuid = service_uuid;
   this->service_base_url = base_url + "/" + service_name;
 
-  std::cout << "Subscribe " << service_name << " " << service_uuid << std::endl;
   theStream = stub_->Subscribe(&theContext);
-  std::cout << "Subscribe theStream->use_count()  " << theStream.use_count()
-            << std::endl;
-  std::cout << "INSIDE Subscribe() theStream " << theStream << std::endl;
   ToPolycubed request;
   request.mutable_serviced_info()->set_service_name(service_name);
   request.mutable_serviced_info()->set_uuid(service_uuid);
   request.set_subscribe(true);
 
   auto ret = theStream->Write(request);
-  std::cout << "Subscribe returned write " << ret << std::endl;
   // stream->WritesDone(); // yes or no ????
 
-  // pino TODO: maybe here we can read the stream launching a thread for a
+  // (pinoOgni TODO: maybe here we can read the stream launching a thread for a
   // method ReadTheStream then in the subscribe we can use the join for the
   // thread or std::terminate() or nothing (because the program will close after
   // the unsubscribe)
 
-  // pino TODO: remove these lines, the thread should be moved to the
+  // (pinoOgni) TODO: remove these lines, the thread should be moved to the
   // service/main and it will be a MUST for the developer. If the thread is
   // called here, the service/main will stop immediatily if there is no infinite
   // while loop
@@ -101,8 +98,6 @@ Bool PolycubeClient::Unsubscribe() {
   if (status.ok()) {
     return reply;
   } else {
-    std::cout << status.error_code() << ": " << status.error_message()
-              << std::endl;
     return reply;
   }
 }
@@ -118,60 +113,35 @@ Bool PolycubeClient::Unsubscribe() {
  This method is used to continuously read the stream. It is launched in a thread
 */
 void PolycubeClient::ReadTheStream() {
-  std::cout << "ReadTheStream  theStream " << this->theStream << std::endl;
-  std::cout << "ReadTheStream theStream->use_count()  "
-            << this->theStream.use_count() << std::endl;
   ToServiced request;
   ToPolycubed reply;
   // theStream->WritesDone();
   std::cout << "\n Waiting for something to read from the stream .... \n "
             << std::endl;
   while (this->theStream->Read(&request)) {
-    std::cout << "true " << request.has_rest_user_to_service_request()
-              << std::endl;
-    std::cout << "false " << request.has_dataplane_to_serviced_request()
-              << std::endl;
-    std::cout << "method " << request.rest_user_to_service_request().http_verb()
-              << std::endl;
-    std::cout << "body "
-              << request.rest_user_to_service_request().request_body()
-              << std::endl;
-    std::cout << "url " << request.rest_user_to_service_request().url()
-              << std::endl;
 
     /*
-      For now two cases: rest user to serviced request and dataplane to serviced
-      request
+      For now two cases: rest user to serviced request and dataplane to serviced packet
     */
     try {
       if (request.has_rest_user_to_service_request()) {
         PathMatch match = this->router.matchPath(
             request.rest_user_to_service_request().url(),
             request.rest_user_to_service_request().http_verb());
-        std::cout << "pathTemplate " << match.pathTemplate()
-                  << std::endl;  // returns the generic url template
-        std::cout
-            << "path " << match.path()
-            << std::endl;  // returns the requested url created by matchPath
 
         auto method_call = this->methods_map.at(
             std::make_pair(match.pathTemplate(), match.http_verb()));
-        if (method_call == nullptr)
-          std::cout << "method_call è nullptr";
-        else
-          std::cout << "tutto ok method_call";
-
+        // (pinoOgni): what to do?
+        // if (method_call == nullptr)
+  
         std::string cubeName = match["cubeName"];
-        std::cout << "cube name from match " << cubeName << std::endl;
         request.mutable_serviced_info()->set_cube_name(cubeName);
 
         std::string portName = match["portName"];
-        std::cout << "port name from match " << portName << std::endl;
         request.mutable_serviced_info()->set_port_name(portName);
 
-        // pino: this is a trick, maybe there is a bettere way, the peer name is
-        // "peerName" and not peerName, so we need to remove the two double
-        // quotas
+        // (pinoOgni): this is a trick, maybe there is a bettere way, the peer name is
+        // "peerName" and not peerName, so we need to remove the two double quotas
         std::string peer =
             (request.rest_user_to_service_request().request_body().empty() ==
              true)
@@ -181,9 +151,8 @@ void PolycubeClient::ReadTheStream() {
           peer = peer.substr(1, peer.size() - 2);
           // (pinoOgni) I dunno if there is a bettere way
           request.mutable_serviced_info()->set_peer_name(peer);
-          std::cout << "peer name from match " << peer << std::endl;
         }
-        // maybe i could launch a thread to fulfill the request (pinoOgni)
+        // (pinoOgni): maybe i could launch a thread to fulfill the request
 
         /*
           here the correct method is called using the map where each key is
@@ -191,10 +160,13 @@ void PolycubeClient::ReadTheStream() {
           final developer that is the Service Controlplane
         */
         reply = method_call(request, this);
-        std::cout << "MESSAGE PINO "
-                  << reply.serviced_to_rest_user_reply().message() << std::endl;
       } else if (request.has_dataplane_to_serviced_request()) {
+        	/*
+				    Still to be implemented, the message has been created in the proto to represent the case of the dataplane 
+				    requesting something from the service, i.e. the call of a control plane method by the data plane
+			    */
       } else if (request.has_dataplane_to_serviced_packet()) {
+        // (pinoOgni): TODO
         std::cout << "request.dataplane_to_serviced_packet().cube_id() "
                   << request.dataplane_to_serviced_packet().cube_id()
                   << std::endl;
@@ -231,17 +203,14 @@ void PolycubeClient::ReadTheStream() {
           the real logic written by the controlplane developer will be implemented
         */
       } else {
+        // (pinoOgni): what to do?
         std::cout << "ERROR: message case not implemented!" << std::endl;
       }
 
-      std::cout << "WRITING REPLY TO POLYCUBED" << std::endl;
       this->theStream->Write(reply);
-      std::cout << "REPLY TO POLYCUBED WRITTEN" << std::endl;
-      std::cout << "\n Waiting for something to read from the stream .... \n "
-                << std::endl;
+      std::cout << "\n Waiting for something to read from the stream .... \n "  << std::endl;
 
     } catch (const std::exception &exc) {
-      std::cout << "EXCEPTION " << exc.what() << std::endl;
       reply.mutable_serviced_to_rest_user_reply()->set_success(false);
       reply.mutable_serviced_to_rest_user_reply()->set_message(exc.what());
       this->theStream->Write(reply);
@@ -461,6 +430,9 @@ Bool PolycubeClient::SetPeer(const std::string cube_name,
   size_t value_size);
   * Bool TableRemove(const std::string cube_name, const std::string map_name,
   const commons::CubeInfo_ProgramType program_type, void *key, size_t key_size);
+  
+  // (pinoOgni): TODO
+  TableRemoveAll
   ====================================================================================================
 */
 
@@ -534,20 +506,6 @@ MapValue PolycubeClient::TableGet(
   request.mutable_get_request()->set_key_size(key_size);
   request.mutable_get_request()->set_value_size(value_size);
 
-  std::cout << " \n key size " << key_size << " ---- value size " << value_size
-            << std::endl;
-  std::cout << " \n sizeof(key_bytes) " << sizeof(key_bytes) << std::endl;
-  std::cout << " \n request.get_request().key().size() "
-            << request.get_request().key().size() << std::endl;
-
-  std::cout << "\n\n key_bytes " << std::endl;
-  for (auto val : key_bytes)
-    printf("\\x%.2x", val);
-
-  std::cout << "\n\n request.get_request().key() " << std::endl;
-  for (auto val : request.get_request().key())
-    printf("\\x%.2x", val);
-
   // Container for the data we expect from the server.
   MapValue reply;
 
@@ -598,35 +556,6 @@ Bool PolycubeClient::TableSet(const std::string cube_name,
   request.mutable_set_request()->set_value(value_bytes, value_size);
   request.mutable_set_request()->set_value_size(value_size);
 
-  std::cout << " \n key size " << key_size << " ---- value size " << value_size
-            << std::endl;
-  std::cout << " \n strlen(key_bytes) " << strlen(key_bytes)
-            << " ---- strlen(value_bytes) " << strlen(value_bytes) << std::endl;
-  std::cout << " \n sizeof(key_bytes) " << sizeof(key_bytes)
-            << " ---- sizeof(value_bytes) " << sizeof(value_bytes) << std::endl;
-  std::cout << " \n sizeof(request.set_request().key()) "
-            << sizeof(request.set_request().key())
-            << " ---- sizeof(request.set_request().value()) "
-            << sizeof(request.set_request().value()) << std::endl;
-  std::cout << " \n request.set_request().key().size() "
-            << request.set_request().key().size()
-            << " ---- request.set_request().value().size() "
-            << request.set_request().value().size() << std::endl;
-
-  std::cout << "\n\n key_bytes " << std::endl;
-  for (auto val : key_bytes)
-    printf("\\x%.2x", val);
-  std::cout << "\n\n value_bytes " << std::endl;
-  for (auto val : value_bytes)
-    printf("\\x%.2x", val);
-
-  std::cout << "\n\n request.set_request().key() " << std::endl;
-  for (auto val : request.set_request().key())
-    printf("\\x%.2x", val);
-  std::cout << "\n\n request.set_request().value() " << std::endl;
-  for (auto val : request.set_request().value())
-    printf("\\x%.2x", val);
-
   // Container for the data we expect from the server.
   Bool reply;
 
@@ -676,18 +605,6 @@ Bool PolycubeClient::TableRemove(
   request.mutable_remove_request()->set_key(key_bytes, key_size);
   request.mutable_remove_request()->set_key_size(key_size);
 
-  std::cout << " \n key size " << key_size << std::endl;
-  std::cout << " \n request.remove_request().key().size() "
-            << request.remove_request().key().size() << std::endl;
-
-  std::cout << "\n\n key_bytes " << std::endl;
-  for (auto val : key_bytes)
-    printf("\\x%.2x", val);
-
-  std::cout << "\n\n request.remove_request().key() " << std::endl;
-  for (auto val : request.remove_request().key())
-    printf("\\x%.2x", val);
-
   // Container for the data we expect from the server.
   Bool reply;
 
@@ -721,7 +638,7 @@ Bool PolycubeClient::TableRemove(
   ToPolycubed(*method)(ToServiced,PolycubeClient*));
   * void RegisterHandlerPatch(const std::string path,
   ToPolycubed(*method)(ToServiced,PolycubeClient*));
-  * void RegisterHandlerDel(const std::string path,
+  * void RegisterHandlerDelete(const std::string path,
   ToPolycubed(*method)(ToServiced,PolycubeClient*));
   * void RegisterHandlerOptions(const std::string path,
   ToPolycubed(*method)(ToServiced,PolycubeClient*));
@@ -740,7 +657,6 @@ void PolycubeClient::RegisterHandler(const std::string path,
   for (auto &c : uppercase_http_verb)
     c = std::toupper(c);
   router.registerPath(service_base_url + "/" + path, uppercase_http_verb);
-  // std::cout << "registerpath " << service_base_url+"/"+path << std::endl;
   methods_map[std::make_pair(std::string(service_base_url + "/" + path),
                              uppercase_http_verb)] = method;
 }
@@ -761,7 +677,7 @@ void PolycubeClient::RegisterHandlerGet(
   This method is used to register a path and add the handler/method to the map
   (key=template and http verb, value=handler)
 */
-void PolycubeClient::RegisterHandlerDel(
+void PolycubeClient::RegisterHandlerDelete(
     const std::string path,
     ToPolycubed (*method)(ToServiced, PolycubeClient *)) {
   router.registerPath(service_base_url + "/" + path, "DELETE");
