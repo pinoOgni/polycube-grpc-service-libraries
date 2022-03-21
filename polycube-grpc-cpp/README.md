@@ -1,5 +1,9 @@
 # Polycube gRPC Cpp library
 
+## Note
+
+**The polycube-grpc-cpp library is in a beta version, after an initial phase, efforts have focused on Go and Python We are trying to keep it updated as much as we can**
+
 This is the Polycube gRPC library in C ++.
 
 

@@ -1,3 +1,7 @@
 polycube-grpc-cpp/build/*
 examples/cpp/pcn-helloworld2/build/*
 .vscode/*
+examples/go/pcn-helloworldgo/helloworldgo
+examples/go/pcn-transparenthelloworldgo/transparenthelloworldgo
+examples/go/skeleton-project/skeleton
+bash_tests/*
