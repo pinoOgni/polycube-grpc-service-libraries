@@ -1,6 +1,5 @@
 #include "PathMatch.h"
 #include "Exceptions.h"
-#include <iostream> //pino for debugging
 
 namespace Routing {
 
@@ -11,7 +10,7 @@ PathMatch::PathMatch(std::string path, Details::PathTemplate const &tpl, std::st
 
 std::string PathMatch::getVar(std::string const &name) const {
     if (!_pathTemplate.parser().hasDynVar(name)) {
-        return std::string(); // pino
+        return std::string(); // (pinoOgni): modification made for the grpc part
     }
 
     int pos = _pathTemplate.parser().getDynVarPos(name);

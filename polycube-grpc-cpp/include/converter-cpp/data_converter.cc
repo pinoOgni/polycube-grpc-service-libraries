@@ -105,7 +105,6 @@ uint64_t bytesToUint64_t_48(const std::string& data, int start) {
     std::cerr << "Error: data is to small";
     return 0;
   }
-  std::cout << "800A" << std::endl;
   for(int i=0;i<6;i++)
     printf("%d - %.2x \n", i, data[start+i]);
   std::cout << std::endl;
@@ -140,7 +139,6 @@ uint64_t bytesToUint64_t(const std::string& data, int start) {
     std::cerr << "Error: data is to small";
     return 0;
   }
-  std::cout << "800A" << std::endl;
   std::cout << data[start] << " - " << data[start+1] << " - "  
       << data[start+2] << " - " << data[start+3] << " - "
       << data[start+4] << " - " << data[start+5] << " - "
