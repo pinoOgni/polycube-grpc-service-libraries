@@ -723,7 +723,7 @@ func (x *DataplaneToServicedRequest) GetParameters() [][]byte {
 	return nil
 }
 
-// occhio che alcune cose erano 16 ma ora sono 32 per via di protobuf
+// (pinoOgni): Attention some things were 16 but now they are 32 due to protobuf
 type DataplaneToServicedPacket struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1353,7 +1353,7 @@ func (x *CubeManagement) GetConf() string {
 //
 //This message is used to represent a generic port
 //Version 1
-//pino: TODO improve it
+//(pinoOgni): TODO improve it
 type Port struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

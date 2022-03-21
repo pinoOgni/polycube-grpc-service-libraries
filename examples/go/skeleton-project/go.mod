@@ -2,7 +2,6 @@ module skeleton
 
 go 1.17
 
-replace github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go v0.0.0-20220204154707-a45291043d50 => /home/netgroup/polycube-grpc-service-libraries/polycube-grpc-go
 
 require github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go v0.0.0-20220204154707-a45291043d50
 
@@ -17,3 +16,5 @@ require (
 	google.golang.org/grpc v1.44.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 )
+
+replace github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go v0.0.0-20220204154707-a45291043d50 => /home/netgroup/polycube-grpc-service-libraries/polycube-grpc-go

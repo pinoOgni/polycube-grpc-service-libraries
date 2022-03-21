@@ -2,7 +2,7 @@ module transparenthellowordgo
 
 go 1.17
 
-require github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go v0.0.0-20220223125954-3d217d7cc488
+require github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go v0.0.0-20220309144525-a5660d16a1bc
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -16,4 +16,4 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 )
 
-replace github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go v0.0.0-20220223125954-3d217d7cc488 => /home/netgroup/polycube-grpc-service-libraries/polycube-grpc-go
+replace github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go v0.0.0-20220309144525-a5660d16a1bc => /home/netgroup/polycube-grpc-service-libraries/polycube-grpc-go

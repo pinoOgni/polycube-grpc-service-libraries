@@ -156,7 +156,7 @@ message DataplaneToServicedRequest {
     dataplane to service case: this is the request created from the dataplane to the service
     IT REPRESENTS A PACKET
 */
-// occhio che alcune cose erano 16 ma ora sono 32 per via di protobuf
+// attenation that some things were 16 but now they are 32 due to protobuf
 message DataplaneToServicedPacket {
     uint32 cube_id = 1;
     uint32 port_id = 2;
@@ -290,7 +290,7 @@ message CubeManagement {
 /*
     This message is used to represent a generic port
     Version 1
-    pino: TODO improve it
+    (pinoOgni): TODO improve it
 */
 message Port {
     string name = 1;

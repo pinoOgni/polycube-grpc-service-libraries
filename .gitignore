@@ -4,3 +4,4 @@ examples/cpp/pcn-helloworld2/build/*
 examples/go/pcn-helloworldgo/helloworldgo
 examples/go/pcn-transparenthelloworldgo/transparenthelloworldgo
 examples/go/skeleton-project/skeleton
+bash_tests/*
