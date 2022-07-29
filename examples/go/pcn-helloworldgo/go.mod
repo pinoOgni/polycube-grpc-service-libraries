@@ -1,11 +1,11 @@
-module pcn-helloworldgo
+module helloworldgo
 
-go 1.17
+go 1.18
 
 require (
-	github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go v0.0.0-20220204154707-a45291043d50
-	google.golang.org/grpc v1.44.0
-	google.golang.org/grpc/examples v0.0.0-20220209221444-a354b1eec350
+	github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go v0.0.0-20220321174733-7b460a4fc084
+	google.golang.org/grpc v1.45.0
+	google.golang.org/grpc/examples v0.0.0-20220329220628-b6873c006da7
 )
 
 require (
@@ -19,4 +19,5 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 )
 
-replace github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go v0.0.0-20220204154707-a45291043d50 => /home/netgroup/polycube-grpc-service-libraries/polycube-grpc-go
+
+replace github.com/pinoOgni/polycube-grpc-service-libraries/polycube-grpc-go v0.0.0-20220321174733-7b460a4fc084 => /home/giuseppe/polycube-grpc-service-libraries/polycube-grpc-go

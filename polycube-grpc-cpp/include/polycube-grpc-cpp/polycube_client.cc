@@ -502,7 +502,7 @@ MapValue PolycubeClient::TableGet(
   char key_bytes[key_size];
   memcpy(key_bytes, key, key_size);
 
-  request.mutable_get_request()->set_key(key_bytes, key_size);
+  request.mutable_get_request()->set_key(std::string(key_bytes));
   request.mutable_get_request()->set_key_size(key_size);
   request.mutable_get_request()->set_value_size(value_size);
 
@@ -551,9 +551,9 @@ Bool PolycubeClient::TableSet(const std::string cube_name,
   char value_bytes[value_size];
   memcpy(value_bytes, value, value_size);
 
-  request.mutable_set_request()->set_key(key_bytes, key_size);
+  request.mutable_set_request()->set_key(std::string(key_bytes));
   request.mutable_set_request()->set_key_size(key_size);
-  request.mutable_set_request()->set_value(value_bytes, value_size);
+  request.mutable_set_request()->set_value(std::string(value_bytes));
   request.mutable_set_request()->set_value_size(value_size);
 
   // Container for the data we expect from the server.
@@ -602,7 +602,7 @@ Bool PolycubeClient::TableRemove(
   char key_bytes[key_size];
   memcpy(key_bytes, key, key_size);
 
-  request.mutable_remove_request()->set_key(key_bytes, key_size);
+  request.mutable_remove_request()->set_key(std::string(key_bytes));
   request.mutable_remove_request()->set_key_size(key_size);
 
   // Container for the data we expect from the server.

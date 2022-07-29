@@ -7,7 +7,6 @@
 #include "polycube_grpc_commons.pb.h"
 
 #include <functional>
-#include <grpc/impl/codegen/port_platform.h>
 #include <grpcpp/impl/codegen/async_generic_service.h>
 #include <grpcpp/impl/codegen/async_stream.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
@@ -83,17 +82,6 @@ class Polycube final {
     }
     //
     // ====================================================================================================
-    // TODO OR MAYBE TODO
-    // ====================================================================================================
-    virtual ::grpc::Status SimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::commons::ToServiced* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::commons::ToServiced>> AsyncSimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::commons::ToServiced>>(AsyncSimpleUnaryMethodRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::commons::ToServiced>> PrepareAsyncSimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::commons::ToServiced>>(PrepareAsyncSimpleUnaryMethodRaw(context, request, cq));
-    }
-    //
-    // ====================================================================================================
     // EBPF MAP MANAGEMENT CALLS
     // ====================================================================================================
     //
@@ -158,56 +146,26 @@ class Polycube final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::commons::Bool>> PrepareAsyncSetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::commons::Bool>>(PrepareAsyncSetPeerRaw(context, request, cq));
     }
-    class experimental_async_interface {
+    class async_interface {
      public:
-      virtual ~experimental_async_interface() {}
+      virtual ~async_interface() {}
       //
       // ====================================================================================================
       // SERVICE MANAGEMENT CALLS
       // ====================================================================================================
       virtual void Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Subscribe(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::commons::ToPolycubed,::commons::ToServiced>* reactor) = 0;
-      #else
-      virtual void Subscribe(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::commons::ToPolycubed,::commons::ToServiced>* reactor) = 0;
-      #endif
       //
       // ====================================================================================================
       // CUBE MANAGEMENT CALLS
       // ====================================================================================================
       virtual void Reload(::grpc::ClientContext* context, const ::commons::Dataplane* request, ::commons::Empty* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Reload(::grpc::ClientContext* context, const ::commons::Dataplane* request, ::commons::Empty* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Reload(::grpc::ClientContext* context, const ::commons::Dataplane* request, ::commons::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void DestroyCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void DestroyCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void DestroyCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void CreateCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void CreateCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void CreateCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      //
-      // ====================================================================================================
-      // TODO OR MAYBE TODO
-      // ====================================================================================================
-      virtual void SimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed* request, ::commons::ToServiced* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void SimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed* request, ::commons::ToServiced* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void SimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed* request, ::commons::ToServiced* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       //
       // ====================================================================================================
       // EBPF MAP MANAGEMENT CALLS
@@ -215,66 +173,30 @@ class Polycube final {
       //
       // https://www.bouncybouncy.net/blog/bpf_map_get_next_key-pitfalls/
       virtual void TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void TableGetAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void TableGetAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void TableGetAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void TableGet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void TableGet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void TableGet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void TableRemove(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void TableRemove(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void TableRemove(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void TableRemoveAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void TableRemoveAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void TableRemoveAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       //
       // ====================================================================================================
       // PORT MANAGEMENT CALLS
       // ====================================================================================================
       virtual void SetPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void SetPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void SetPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void DelPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void DelPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void DelPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void SetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void SetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void SetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
     };
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    typedef class experimental_async_interface async_interface;
-    #endif
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    async_interface* async() { return experimental_async(); }
-    #endif
-    virtual class experimental_async_interface* experimental_async() { return nullptr; }
-  private:
+    typedef class async_interface experimental_async_interface;
+    virtual class async_interface* async() { return nullptr; }
+    class async_interface* experimental_async() { return async(); }
+   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::commons::Bool>* AsyncUnsubscribeRaw(::grpc::ClientContext* context, const ::commons::ServicedInfo& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::commons::Bool>* PrepareAsyncUnsubscribeRaw(::grpc::ClientContext* context, const ::commons::ServicedInfo& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientReaderWriterInterface< ::commons::ToPolycubed, ::commons::ToServiced>* SubscribeRaw(::grpc::ClientContext* context) = 0;
@@ -286,8 +208,6 @@ class Polycube final {
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::commons::Bool>* PrepareAsyncDestroyCubeRaw(::grpc::ClientContext* context, const ::commons::CubeManagement& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::commons::Bool>* AsyncCreateCubeRaw(::grpc::ClientContext* context, const ::commons::CubeManagement& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::commons::Bool>* PrepareAsyncCreateCubeRaw(::grpc::ClientContext* context, const ::commons::CubeManagement& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::commons::ToServiced>* AsyncSimpleUnaryMethodRaw(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::commons::ToServiced>* PrepareAsyncSimpleUnaryMethodRaw(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::commons::Bool>* AsyncTableSetRaw(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::commons::Bool>* PrepareAsyncTableSetRaw(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::commons::MapValue>* AsyncTableGetAllRaw(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest& request, ::grpc::CompletionQueue* cq) = 0;
@@ -307,7 +227,7 @@ class Polycube final {
   };
   class Stub final : public StubInterface {
    public:
-    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
     ::grpc::Status Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo& request, ::commons::Bool* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::commons::Bool>> AsyncUnsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::commons::Bool>>(AsyncUnsubscribeRaw(context, request, cq));
@@ -344,13 +264,6 @@ class Polycube final {
     }
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::commons::Bool>> PrepareAsyncCreateCube(::grpc::ClientContext* context, const ::commons::CubeManagement& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::commons::Bool>>(PrepareAsyncCreateCubeRaw(context, request, cq));
-    }
-    ::grpc::Status SimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::commons::ToServiced* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::commons::ToServiced>> AsyncSimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::commons::ToServiced>>(AsyncSimpleUnaryMethodRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::commons::ToServiced>> PrepareAsyncSimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::commons::ToServiced>>(PrepareAsyncSimpleUnaryMethodRaw(context, request, cq));
     }
     ::grpc::Status TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest& request, ::commons::Bool* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::commons::Bool>> AsyncTableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest& request, ::grpc::CompletionQueue* cq) {
@@ -408,103 +321,45 @@ class Polycube final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::commons::Bool>> PrepareAsyncSetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::commons::Bool>>(PrepareAsyncSetPeerRaw(context, request, cq));
     }
-    class experimental_async final :
-      public StubInterface::experimental_async_interface {
+    class async final :
+      public StubInterface::async_interface {
      public:
       void Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Subscribe(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::commons::ToPolycubed,::commons::ToServiced>* reactor) override;
-      #else
-      void Subscribe(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::commons::ToPolycubed,::commons::ToServiced>* reactor) override;
-      #endif
       void Reload(::grpc::ClientContext* context, const ::commons::Dataplane* request, ::commons::Empty* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Reload(::grpc::ClientContext* context, const ::commons::Dataplane* request, ::commons::Empty* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Reload(::grpc::ClientContext* context, const ::commons::Dataplane* request, ::commons::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void DestroyCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void DestroyCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void DestroyCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void CreateCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void CreateCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void CreateCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      void SimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed* request, ::commons::ToServiced* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void SimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed* request, ::commons::ToServiced* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void SimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed* request, ::commons::ToServiced* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void TableGetAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void TableGetAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void TableGetAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void TableGet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void TableGet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void TableGet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void TableRemove(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void TableRemove(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void TableRemove(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void TableRemoveAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void TableRemoveAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void TableRemoveAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void SetPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void SetPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void SetPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void DelPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void DelPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void DelPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void SetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void SetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void SetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
      private:
       friend class Stub;
-      explicit experimental_async(Stub* stub): stub_(stub) { }
+      explicit async(Stub* stub): stub_(stub) { }
       Stub* stub() { return stub_; }
       Stub* stub_;
     };
-    class experimental_async_interface* experimental_async() override { return &async_stub_; }
+    class async* async() override { return &async_stub_; }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
-    class experimental_async async_stub_{this};
+    class async async_stub_{this};
     ::grpc::ClientAsyncResponseReader< ::commons::Bool>* AsyncUnsubscribeRaw(::grpc::ClientContext* context, const ::commons::ServicedInfo& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::commons::Bool>* PrepareAsyncUnsubscribeRaw(::grpc::ClientContext* context, const ::commons::ServicedInfo& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientReaderWriter< ::commons::ToPolycubed, ::commons::ToServiced>* SubscribeRaw(::grpc::ClientContext* context) override;
@@ -516,8 +371,6 @@ class Polycube final {
     ::grpc::ClientAsyncResponseReader< ::commons::Bool>* PrepareAsyncDestroyCubeRaw(::grpc::ClientContext* context, const ::commons::CubeManagement& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::commons::Bool>* AsyncCreateCubeRaw(::grpc::ClientContext* context, const ::commons::CubeManagement& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::commons::Bool>* PrepareAsyncCreateCubeRaw(::grpc::ClientContext* context, const ::commons::CubeManagement& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::commons::ToServiced>* AsyncSimpleUnaryMethodRaw(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::commons::ToServiced>* PrepareAsyncSimpleUnaryMethodRaw(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::commons::Bool>* AsyncTableSetRaw(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::commons::Bool>* PrepareAsyncTableSetRaw(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::commons::MapValue>* AsyncTableGetAllRaw(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest& request, ::grpc::CompletionQueue* cq) override;
@@ -539,7 +392,6 @@ class Polycube final {
     const ::grpc::internal::RpcMethod rpcmethod_Reload_;
     const ::grpc::internal::RpcMethod rpcmethod_DestroyCube_;
     const ::grpc::internal::RpcMethod rpcmethod_CreateCube_;
-    const ::grpc::internal::RpcMethod rpcmethod_SimpleUnaryMethod_;
     const ::grpc::internal::RpcMethod rpcmethod_TableSet_;
     const ::grpc::internal::RpcMethod rpcmethod_TableGetAll_;
     const ::grpc::internal::RpcMethod rpcmethod_TableGet_;
@@ -568,11 +420,6 @@ class Polycube final {
     virtual ::grpc::Status Reload(::grpc::ServerContext* context, const ::commons::Dataplane* request, ::commons::Empty* response);
     virtual ::grpc::Status DestroyCube(::grpc::ServerContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response);
     virtual ::grpc::Status CreateCube(::grpc::ServerContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response);
-    //
-    // ====================================================================================================
-    // TODO OR MAYBE TODO
-    // ====================================================================================================
-    virtual ::grpc::Status SimpleUnaryMethod(::grpc::ServerContext* context, const ::commons::ToPolycubed* request, ::commons::ToServiced* response);
     //
     // ====================================================================================================
     // EBPF MAP MANAGEMENT CALLS
@@ -693,32 +540,12 @@ class Polycube final {
     }
   };
   template <class BaseClass>
-  class WithAsyncMethod_SimpleUnaryMethod : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithAsyncMethod_SimpleUnaryMethod() {
-      ::grpc::Service::MarkMethodAsync(5);
-    }
-    ~WithAsyncMethod_SimpleUnaryMethod() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SimpleUnaryMethod(::grpc::ServerContext* /*context*/, const ::commons::ToPolycubed* /*request*/, ::commons::ToServiced* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestSimpleUnaryMethod(::grpc::ServerContext* context, ::commons::ToPolycubed* request, ::grpc::ServerAsyncResponseWriter< ::commons::ToServiced>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(5, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  template <class BaseClass>
   class WithAsyncMethod_TableSet : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_TableSet() {
-      ::grpc::Service::MarkMethodAsync(6);
+      ::grpc::Service::MarkMethodAsync(5);
     }
     ~WithAsyncMethod_TableSet() override {
       BaseClassMustBeDerivedFromService(this);
@@ -729,7 +556,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestTableSet(::grpc::ServerContext* context, ::commons::ServicedToDataplaneRequest* request, ::grpc::ServerAsyncResponseWriter< ::commons::Bool>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(6, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(5, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -738,7 +565,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_TableGetAll() {
-      ::grpc::Service::MarkMethodAsync(7);
+      ::grpc::Service::MarkMethodAsync(6);
     }
     ~WithAsyncMethod_TableGetAll() override {
       BaseClassMustBeDerivedFromService(this);
@@ -749,7 +576,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestTableGetAll(::grpc::ServerContext* context, ::commons::ServicedToDataplaneRequest* request, ::grpc::ServerAsyncResponseWriter< ::commons::MapValue>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(7, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(6, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -758,7 +585,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_TableGet() {
-      ::grpc::Service::MarkMethodAsync(8);
+      ::grpc::Service::MarkMethodAsync(7);
     }
     ~WithAsyncMethod_TableGet() override {
       BaseClassMustBeDerivedFromService(this);
@@ -769,7 +596,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestTableGet(::grpc::ServerContext* context, ::commons::ServicedToDataplaneRequest* request, ::grpc::ServerAsyncResponseWriter< ::commons::MapValue>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(7, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -778,7 +605,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_TableRemove() {
-      ::grpc::Service::MarkMethodAsync(9);
+      ::grpc::Service::MarkMethodAsync(8);
     }
     ~WithAsyncMethod_TableRemove() override {
       BaseClassMustBeDerivedFromService(this);
@@ -789,7 +616,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestTableRemove(::grpc::ServerContext* context, ::commons::ServicedToDataplaneRequest* request, ::grpc::ServerAsyncResponseWriter< ::commons::Bool>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(9, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -798,7 +625,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_TableRemoveAll() {
-      ::grpc::Service::MarkMethodAsync(10);
+      ::grpc::Service::MarkMethodAsync(9);
     }
     ~WithAsyncMethod_TableRemoveAll() override {
       BaseClassMustBeDerivedFromService(this);
@@ -809,7 +636,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestTableRemoveAll(::grpc::ServerContext* context, ::commons::ServicedToDataplaneRequest* request, ::grpc::ServerAsyncResponseWriter< ::commons::Bool>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(10, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(9, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -818,7 +645,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_SetPort() {
-      ::grpc::Service::MarkMethodAsync(11);
+      ::grpc::Service::MarkMethodAsync(10);
     }
     ~WithAsyncMethod_SetPort() override {
       BaseClassMustBeDerivedFromService(this);
@@ -829,7 +656,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestSetPort(::grpc::ServerContext* context, ::commons::ServicedToDataplaneRequest* request, ::grpc::ServerAsyncResponseWriter< ::commons::Bool>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(10, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -838,7 +665,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_DelPort() {
-      ::grpc::Service::MarkMethodAsync(12);
+      ::grpc::Service::MarkMethodAsync(11);
     }
     ~WithAsyncMethod_DelPort() override {
       BaseClassMustBeDerivedFromService(this);
@@ -849,7 +676,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestDelPort(::grpc::ServerContext* context, ::commons::ServicedToDataplaneRequest* request, ::grpc::ServerAsyncResponseWriter< ::commons::Bool>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(12, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -858,7 +685,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_SetPeer() {
-      ::grpc::Service::MarkMethodAsync(13);
+      ::grpc::Service::MarkMethodAsync(12);
     }
     ~WithAsyncMethod_SetPeer() override {
       BaseClassMustBeDerivedFromService(this);
@@ -869,41 +696,27 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestSetPeer(::grpc::ServerContext* context, ::commons::ServicedToDataplaneRequest* request, ::grpc::ServerAsyncResponseWriter< ::commons::Bool>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(13, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(12, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_Unsubscribe<WithAsyncMethod_Subscribe<WithAsyncMethod_Reload<WithAsyncMethod_DestroyCube<WithAsyncMethod_CreateCube<WithAsyncMethod_SimpleUnaryMethod<WithAsyncMethod_TableSet<WithAsyncMethod_TableGetAll<WithAsyncMethod_TableGet<WithAsyncMethod_TableRemove<WithAsyncMethod_TableRemoveAll<WithAsyncMethod_SetPort<WithAsyncMethod_DelPort<WithAsyncMethod_SetPeer<Service > > > > > > > > > > > > > > AsyncService;
+  typedef WithAsyncMethod_Unsubscribe<WithAsyncMethod_Subscribe<WithAsyncMethod_Reload<WithAsyncMethod_DestroyCube<WithAsyncMethod_CreateCube<WithAsyncMethod_TableSet<WithAsyncMethod_TableGetAll<WithAsyncMethod_TableGet<WithAsyncMethod_TableRemove<WithAsyncMethod_TableRemoveAll<WithAsyncMethod_SetPort<WithAsyncMethod_DelPort<WithAsyncMethod_SetPeer<Service > > > > > > > > > > > > > AsyncService;
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_Unsubscribe : public BaseClass {
+  class WithCallbackMethod_Unsubscribe : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_Unsubscribe() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(0,
+    WithCallbackMethod_Unsubscribe() {
+      ::grpc::Service::MarkMethodCallback(0,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::ServicedInfo, ::commons::Bool>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::ServicedInfo* request, ::commons::Bool* response) { return this->Unsubscribe(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::ServicedInfo* request, ::commons::Bool* response) { return this->Unsubscribe(context, request, response); }));}
     void SetMessageAllocatorFor_Unsubscribe(
-        ::grpc::experimental::MessageAllocator< ::commons::ServicedInfo, ::commons::Bool>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::commons::ServicedInfo, ::commons::Bool>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(0);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::ServicedInfo, ::commons::Bool>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_Unsubscribe() override {
+    ~WithCallbackMethod_Unsubscribe() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -911,37 +724,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* Unsubscribe(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedInfo* /*request*/, ::commons::Bool* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* Unsubscribe(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::ServicedInfo* /*request*/, ::commons::Bool* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedInfo* /*request*/, ::commons::Bool* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_Subscribe : public BaseClass {
+  class WithCallbackMethod_Subscribe : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_Subscribe() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(1,
+    WithCallbackMethod_Subscribe() {
+      ::grpc::Service::MarkMethodCallback(1,
           new ::grpc::internal::CallbackBidiHandler< ::commons::ToPolycubed, ::commons::ToServiced>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context) { return this->Subscribe(context); }));
+                   ::grpc::CallbackServerContext* context) { return this->Subscribe(context); }));
     }
-    ~ExperimentalWithCallbackMethod_Subscribe() override {
+    ~WithCallbackMethod_Subscribe() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -949,46 +746,27 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerBidiReactor< ::commons::ToPolycubed, ::commons::ToServiced>* Subscribe(
       ::grpc::CallbackServerContext* /*context*/)
-    #else
-    virtual ::grpc::experimental::ServerBidiReactor< ::commons::ToPolycubed, ::commons::ToServiced>* Subscribe(
-      ::grpc::experimental::CallbackServerContext* /*context*/)
-    #endif
       { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_Reload : public BaseClass {
+  class WithCallbackMethod_Reload : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_Reload() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(2,
+    WithCallbackMethod_Reload() {
+      ::grpc::Service::MarkMethodCallback(2,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::Dataplane, ::commons::Empty>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::Dataplane* request, ::commons::Empty* response) { return this->Reload(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::Dataplane* request, ::commons::Empty* response) { return this->Reload(context, request, response); }));}
     void SetMessageAllocatorFor_Reload(
-        ::grpc::experimental::MessageAllocator< ::commons::Dataplane, ::commons::Empty>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::commons::Dataplane, ::commons::Empty>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(2);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::Dataplane, ::commons::Empty>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_Reload() override {
+    ~WithCallbackMethod_Reload() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -996,46 +774,26 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* Reload(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::Dataplane* /*request*/, ::commons::Empty* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* Reload(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::Dataplane* /*request*/, ::commons::Empty* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::Dataplane* /*request*/, ::commons::Empty* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_DestroyCube : public BaseClass {
+  class WithCallbackMethod_DestroyCube : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_DestroyCube() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(3,
+    WithCallbackMethod_DestroyCube() {
+      ::grpc::Service::MarkMethodCallback(3,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::CubeManagement, ::commons::Bool>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::CubeManagement* request, ::commons::Bool* response) { return this->DestroyCube(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response) { return this->DestroyCube(context, request, response); }));}
     void SetMessageAllocatorFor_DestroyCube(
-        ::grpc::experimental::MessageAllocator< ::commons::CubeManagement, ::commons::Bool>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::commons::CubeManagement, ::commons::Bool>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(3);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(3);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::CubeManagement, ::commons::Bool>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_DestroyCube() override {
+    ~WithCallbackMethod_DestroyCube() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1043,46 +801,26 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* DestroyCube(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::CubeManagement* /*request*/, ::commons::Bool* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* DestroyCube(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::CubeManagement* /*request*/, ::commons::Bool* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::CubeManagement* /*request*/, ::commons::Bool* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_CreateCube : public BaseClass {
+  class WithCallbackMethod_CreateCube : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_CreateCube() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(4,
+    WithCallbackMethod_CreateCube() {
+      ::grpc::Service::MarkMethodCallback(4,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::CubeManagement, ::commons::Bool>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::CubeManagement* request, ::commons::Bool* response) { return this->CreateCube(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response) { return this->CreateCube(context, request, response); }));}
     void SetMessageAllocatorFor_CreateCube(
-        ::grpc::experimental::MessageAllocator< ::commons::CubeManagement, ::commons::Bool>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::commons::CubeManagement, ::commons::Bool>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(4);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(4);
-    #endif
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::CubeManagement, ::commons::Bool>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_CreateCube() override {
+    ~WithCallbackMethod_CreateCube() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1090,93 +828,26 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* CreateCube(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::CubeManagement* /*request*/, ::commons::Bool* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* CreateCube(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::CubeManagement* /*request*/, ::commons::Bool* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::CubeManagement* /*request*/, ::commons::Bool* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_SimpleUnaryMethod : public BaseClass {
+  class WithCallbackMethod_TableSet : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_SimpleUnaryMethod() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(5,
-          new ::grpc::internal::CallbackUnaryHandler< ::commons::ToPolycubed, ::commons::ToServiced>(
-            [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::ToPolycubed* request, ::commons::ToServiced* response) { return this->SimpleUnaryMethod(context, request, response); }));}
-    void SetMessageAllocatorFor_SimpleUnaryMethod(
-        ::grpc::experimental::MessageAllocator< ::commons::ToPolycubed, ::commons::ToServiced>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(5);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(5);
-    #endif
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::ToPolycubed, ::commons::ToServiced>*>(handler)
-              ->SetMessageAllocator(allocator);
-    }
-    ~ExperimentalWithCallbackMethod_SimpleUnaryMethod() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SimpleUnaryMethod(::grpc::ServerContext* /*context*/, const ::commons::ToPolycubed* /*request*/, ::commons::ToServiced* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    virtual ::grpc::ServerUnaryReactor* SimpleUnaryMethod(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::ToPolycubed* /*request*/, ::commons::ToServiced* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* SimpleUnaryMethod(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::ToPolycubed* /*request*/, ::commons::ToServiced* /*response*/)
-    #endif
-      { return nullptr; }
-  };
-  template <class BaseClass>
-  class ExperimentalWithCallbackMethod_TableSet : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    ExperimentalWithCallbackMethod_TableSet() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(6,
+    WithCallbackMethod_TableSet() {
+      ::grpc::Service::MarkMethodCallback(5,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->TableSet(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->TableSet(context, request, response); }));}
     void SetMessageAllocatorFor_TableSet(
-        ::grpc::experimental::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(6);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(6);
-    #endif
+        ::grpc::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(5);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_TableSet() override {
+    ~WithCallbackMethod_TableSet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1184,46 +855,26 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* TableSet(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* TableSet(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_TableGetAll : public BaseClass {
+  class WithCallbackMethod_TableGetAll : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_TableGetAll() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(7,
+    WithCallbackMethod_TableGetAll() {
+      ::grpc::Service::MarkMethodCallback(6,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::MapValue>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response) { return this->TableGetAll(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response) { return this->TableGetAll(context, request, response); }));}
     void SetMessageAllocatorFor_TableGetAll(
-        ::grpc::experimental::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::MapValue>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(7);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(7);
-    #endif
+        ::grpc::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::MapValue>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(6);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::MapValue>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_TableGetAll() override {
+    ~WithCallbackMethod_TableGetAll() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1231,46 +882,26 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* TableGetAll(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::MapValue* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* TableGetAll(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::MapValue* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::MapValue* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_TableGet : public BaseClass {
+  class WithCallbackMethod_TableGet : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_TableGet() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(8,
+    WithCallbackMethod_TableGet() {
+      ::grpc::Service::MarkMethodCallback(7,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::MapValue>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response) { return this->TableGet(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response) { return this->TableGet(context, request, response); }));}
     void SetMessageAllocatorFor_TableGet(
-        ::grpc::experimental::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::MapValue>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(8);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(8);
-    #endif
+        ::grpc::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::MapValue>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(7);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::MapValue>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_TableGet() override {
+    ~WithCallbackMethod_TableGet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1278,46 +909,26 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* TableGet(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::MapValue* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* TableGet(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::MapValue* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::MapValue* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_TableRemove : public BaseClass {
+  class WithCallbackMethod_TableRemove : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_TableRemove() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(9,
+    WithCallbackMethod_TableRemove() {
+      ::grpc::Service::MarkMethodCallback(8,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->TableRemove(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->TableRemove(context, request, response); }));}
     void SetMessageAllocatorFor_TableRemove(
-        ::grpc::experimental::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(9);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(9);
-    #endif
+        ::grpc::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(8);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_TableRemove() override {
+    ~WithCallbackMethod_TableRemove() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1325,46 +936,26 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* TableRemove(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* TableRemove(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_TableRemoveAll : public BaseClass {
+  class WithCallbackMethod_TableRemoveAll : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_TableRemoveAll() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(10,
+    WithCallbackMethod_TableRemoveAll() {
+      ::grpc::Service::MarkMethodCallback(9,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->TableRemoveAll(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->TableRemoveAll(context, request, response); }));}
     void SetMessageAllocatorFor_TableRemoveAll(
-        ::grpc::experimental::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(10);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(10);
-    #endif
+        ::grpc::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(9);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_TableRemoveAll() override {
+    ~WithCallbackMethod_TableRemoveAll() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1372,46 +963,26 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* TableRemoveAll(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* TableRemoveAll(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_SetPort : public BaseClass {
+  class WithCallbackMethod_SetPort : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_SetPort() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(11,
+    WithCallbackMethod_SetPort() {
+      ::grpc::Service::MarkMethodCallback(10,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->SetPort(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->SetPort(context, request, response); }));}
     void SetMessageAllocatorFor_SetPort(
-        ::grpc::experimental::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(11);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(11);
-    #endif
+        ::grpc::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(10);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_SetPort() override {
+    ~WithCallbackMethod_SetPort() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1419,46 +990,26 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* SetPort(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* SetPort(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_DelPort : public BaseClass {
+  class WithCallbackMethod_DelPort : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_DelPort() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(12,
+    WithCallbackMethod_DelPort() {
+      ::grpc::Service::MarkMethodCallback(11,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->DelPort(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->DelPort(context, request, response); }));}
     void SetMessageAllocatorFor_DelPort(
-        ::grpc::experimental::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(12);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(12);
-    #endif
+        ::grpc::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(11);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_DelPort() override {
+    ~WithCallbackMethod_DelPort() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1466,46 +1017,26 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* DelPort(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* DelPort(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_SetPeer : public BaseClass {
+  class WithCallbackMethod_SetPeer : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_SetPeer() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(13,
+    WithCallbackMethod_SetPeer() {
+      ::grpc::Service::MarkMethodCallback(12,
           new ::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->SetPeer(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response) { return this->SetPeer(context, request, response); }));}
     void SetMessageAllocatorFor_SetPeer(
-        ::grpc::experimental::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(13);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(13);
-    #endif
+        ::grpc::MessageAllocator< ::commons::ServicedToDataplaneRequest, ::commons::Bool>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(12);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::commons::ServicedToDataplaneRequest, ::commons::Bool>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_SetPeer() override {
+    ~WithCallbackMethod_SetPeer() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1513,20 +1044,11 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* SetPeer(
-      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* SetPeer(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::commons::ServicedToDataplaneRequest* /*request*/, ::commons::Bool* /*response*/)  { return nullptr; }
   };
-  #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-  typedef ExperimentalWithCallbackMethod_Unsubscribe<ExperimentalWithCallbackMethod_Subscribe<ExperimentalWithCallbackMethod_Reload<ExperimentalWithCallbackMethod_DestroyCube<ExperimentalWithCallbackMethod_CreateCube<ExperimentalWithCallbackMethod_SimpleUnaryMethod<ExperimentalWithCallbackMethod_TableSet<ExperimentalWithCallbackMethod_TableGetAll<ExperimentalWithCallbackMethod_TableGet<ExperimentalWithCallbackMethod_TableRemove<ExperimentalWithCallbackMethod_TableRemoveAll<ExperimentalWithCallbackMethod_SetPort<ExperimentalWithCallbackMethod_DelPort<ExperimentalWithCallbackMethod_SetPeer<Service > > > > > > > > > > > > > > CallbackService;
-  #endif
-
-  typedef ExperimentalWithCallbackMethod_Unsubscribe<ExperimentalWithCallbackMethod_Subscribe<ExperimentalWithCallbackMethod_Reload<ExperimentalWithCallbackMethod_DestroyCube<ExperimentalWithCallbackMethod_CreateCube<ExperimentalWithCallbackMethod_SimpleUnaryMethod<ExperimentalWithCallbackMethod_TableSet<ExperimentalWithCallbackMethod_TableGetAll<ExperimentalWithCallbackMethod_TableGet<ExperimentalWithCallbackMethod_TableRemove<ExperimentalWithCallbackMethod_TableRemoveAll<ExperimentalWithCallbackMethod_SetPort<ExperimentalWithCallbackMethod_DelPort<ExperimentalWithCallbackMethod_SetPeer<Service > > > > > > > > > > > > > > ExperimentalCallbackService;
+  typedef WithCallbackMethod_Unsubscribe<WithCallbackMethod_Subscribe<WithCallbackMethod_Reload<WithCallbackMethod_DestroyCube<WithCallbackMethod_CreateCube<WithCallbackMethod_TableSet<WithCallbackMethod_TableGetAll<WithCallbackMethod_TableGet<WithCallbackMethod_TableRemove<WithCallbackMethod_TableRemoveAll<WithCallbackMethod_SetPort<WithCallbackMethod_DelPort<WithCallbackMethod_SetPeer<Service > > > > > > > > > > > > > CallbackService;
+  typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Unsubscribe : public BaseClass {
    private:
@@ -1613,29 +1135,12 @@ class Polycube final {
     }
   };
   template <class BaseClass>
-  class WithGenericMethod_SimpleUnaryMethod : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithGenericMethod_SimpleUnaryMethod() {
-      ::grpc::Service::MarkMethodGeneric(5);
-    }
-    ~WithGenericMethod_SimpleUnaryMethod() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SimpleUnaryMethod(::grpc::ServerContext* /*context*/, const ::commons::ToPolycubed* /*request*/, ::commons::ToServiced* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-  };
-  template <class BaseClass>
   class WithGenericMethod_TableSet : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_TableSet() {
-      ::grpc::Service::MarkMethodGeneric(6);
+      ::grpc::Service::MarkMethodGeneric(5);
     }
     ~WithGenericMethod_TableSet() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1652,7 +1157,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_TableGetAll() {
-      ::grpc::Service::MarkMethodGeneric(7);
+      ::grpc::Service::MarkMethodGeneric(6);
     }
     ~WithGenericMethod_TableGetAll() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1669,7 +1174,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_TableGet() {
-      ::grpc::Service::MarkMethodGeneric(8);
+      ::grpc::Service::MarkMethodGeneric(7);
     }
     ~WithGenericMethod_TableGet() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1686,7 +1191,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_TableRemove() {
-      ::grpc::Service::MarkMethodGeneric(9);
+      ::grpc::Service::MarkMethodGeneric(8);
     }
     ~WithGenericMethod_TableRemove() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1703,7 +1208,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_TableRemoveAll() {
-      ::grpc::Service::MarkMethodGeneric(10);
+      ::grpc::Service::MarkMethodGeneric(9);
     }
     ~WithGenericMethod_TableRemoveAll() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1720,7 +1225,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_SetPort() {
-      ::grpc::Service::MarkMethodGeneric(11);
+      ::grpc::Service::MarkMethodGeneric(10);
     }
     ~WithGenericMethod_SetPort() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1737,7 +1242,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_DelPort() {
-      ::grpc::Service::MarkMethodGeneric(12);
+      ::grpc::Service::MarkMethodGeneric(11);
     }
     ~WithGenericMethod_DelPort() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1754,7 +1259,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_SetPeer() {
-      ::grpc::Service::MarkMethodGeneric(13);
+      ::grpc::Service::MarkMethodGeneric(12);
     }
     ~WithGenericMethod_SetPeer() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1866,32 +1371,12 @@ class Polycube final {
     }
   };
   template <class BaseClass>
-  class WithRawMethod_SimpleUnaryMethod : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawMethod_SimpleUnaryMethod() {
-      ::grpc::Service::MarkMethodRaw(5);
-    }
-    ~WithRawMethod_SimpleUnaryMethod() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SimpleUnaryMethod(::grpc::ServerContext* /*context*/, const ::commons::ToPolycubed* /*request*/, ::commons::ToServiced* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestSimpleUnaryMethod(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(5, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  template <class BaseClass>
   class WithRawMethod_TableSet : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_TableSet() {
-      ::grpc::Service::MarkMethodRaw(6);
+      ::grpc::Service::MarkMethodRaw(5);
     }
     ~WithRawMethod_TableSet() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1902,7 +1387,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestTableSet(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(6, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(5, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1911,7 +1396,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_TableGetAll() {
-      ::grpc::Service::MarkMethodRaw(7);
+      ::grpc::Service::MarkMethodRaw(6);
     }
     ~WithRawMethod_TableGetAll() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1922,7 +1407,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestTableGetAll(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(7, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(6, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1931,7 +1416,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_TableGet() {
-      ::grpc::Service::MarkMethodRaw(8);
+      ::grpc::Service::MarkMethodRaw(7);
     }
     ~WithRawMethod_TableGet() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1942,7 +1427,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestTableGet(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(7, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1951,7 +1436,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_TableRemove() {
-      ::grpc::Service::MarkMethodRaw(9);
+      ::grpc::Service::MarkMethodRaw(8);
     }
     ~WithRawMethod_TableRemove() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1962,7 +1447,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestTableRemove(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(9, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1971,7 +1456,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_TableRemoveAll() {
-      ::grpc::Service::MarkMethodRaw(10);
+      ::grpc::Service::MarkMethodRaw(9);
     }
     ~WithRawMethod_TableRemoveAll() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1982,7 +1467,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestTableRemoveAll(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(10, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(9, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1991,7 +1476,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_SetPort() {
-      ::grpc::Service::MarkMethodRaw(11);
+      ::grpc::Service::MarkMethodRaw(10);
     }
     ~WithRawMethod_SetPort() override {
       BaseClassMustBeDerivedFromService(this);
@@ -2002,7 +1487,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestSetPort(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(10, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -2011,7 +1496,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_DelPort() {
-      ::grpc::Service::MarkMethodRaw(12);
+      ::grpc::Service::MarkMethodRaw(11);
     }
     ~WithRawMethod_DelPort() override {
       BaseClassMustBeDerivedFromService(this);
@@ -2022,7 +1507,7 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestDelPort(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(12, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -2031,7 +1516,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_SetPeer() {
-      ::grpc::Service::MarkMethodRaw(13);
+      ::grpc::Service::MarkMethodRaw(12);
     }
     ~WithRawMethod_SetPeer() override {
       BaseClassMustBeDerivedFromService(this);
@@ -2042,31 +1527,21 @@ class Polycube final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestSetPeer(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(13, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(12, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_Unsubscribe : public BaseClass {
+  class WithRawCallbackMethod_Unsubscribe : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_Unsubscribe() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(0,
+    WithRawCallbackMethod_Unsubscribe() {
+      ::grpc::Service::MarkMethodRawCallback(0,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Unsubscribe(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Unsubscribe(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_Unsubscribe() override {
+    ~WithRawCallbackMethod_Unsubscribe() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2074,37 +1549,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* Unsubscribe(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* Unsubscribe(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_Subscribe : public BaseClass {
+  class WithRawCallbackMethod_Subscribe : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_Subscribe() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(1,
+    WithRawCallbackMethod_Subscribe() {
+      ::grpc::Service::MarkMethodRawCallback(1,
           new ::grpc::internal::CallbackBidiHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context) { return this->Subscribe(context); }));
+                   ::grpc::CallbackServerContext* context) { return this->Subscribe(context); }));
     }
-    ~ExperimentalWithRawCallbackMethod_Subscribe() override {
+    ~WithRawCallbackMethod_Subscribe() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2112,37 +1571,22 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerBidiReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* Subscribe(
       ::grpc::CallbackServerContext* /*context*/)
-    #else
-    virtual ::grpc::experimental::ServerBidiReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* Subscribe(
-      ::grpc::experimental::CallbackServerContext* /*context*/)
-    #endif
       { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_Reload : public BaseClass {
+  class WithRawCallbackMethod_Reload : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_Reload() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(2,
+    WithRawCallbackMethod_Reload() {
+      ::grpc::Service::MarkMethodRawCallback(2,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Reload(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Reload(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_Reload() override {
+    ~WithRawCallbackMethod_Reload() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2150,37 +1594,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* Reload(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* Reload(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_DestroyCube : public BaseClass {
+  class WithRawCallbackMethod_DestroyCube : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_DestroyCube() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(3,
+    WithRawCallbackMethod_DestroyCube() {
+      ::grpc::Service::MarkMethodRawCallback(3,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->DestroyCube(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->DestroyCube(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_DestroyCube() override {
+    ~WithRawCallbackMethod_DestroyCube() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2188,37 +1616,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* DestroyCube(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* DestroyCube(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_CreateCube : public BaseClass {
+  class WithRawCallbackMethod_CreateCube : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_CreateCube() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(4,
+    WithRawCallbackMethod_CreateCube() {
+      ::grpc::Service::MarkMethodRawCallback(4,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CreateCube(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CreateCube(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_CreateCube() override {
+    ~WithRawCallbackMethod_CreateCube() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2226,75 +1638,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* CreateCube(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* CreateCube(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_SimpleUnaryMethod : public BaseClass {
+  class WithRawCallbackMethod_TableSet : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_SimpleUnaryMethod() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(5,
+    WithRawCallbackMethod_TableSet() {
+      ::grpc::Service::MarkMethodRawCallback(5,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SimpleUnaryMethod(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->TableSet(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_SimpleUnaryMethod() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SimpleUnaryMethod(::grpc::ServerContext* /*context*/, const ::commons::ToPolycubed* /*request*/, ::commons::ToServiced* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    virtual ::grpc::ServerUnaryReactor* SimpleUnaryMethod(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* SimpleUnaryMethod(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
-  };
-  template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_TableSet : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    ExperimentalWithRawCallbackMethod_TableSet() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(6,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-            [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->TableSet(context, request, response); }));
-    }
-    ~ExperimentalWithRawCallbackMethod_TableSet() override {
+    ~WithRawCallbackMethod_TableSet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2302,37 +1660,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* TableSet(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* TableSet(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_TableGetAll : public BaseClass {
+  class WithRawCallbackMethod_TableGetAll : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_TableGetAll() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(7,
+    WithRawCallbackMethod_TableGetAll() {
+      ::grpc::Service::MarkMethodRawCallback(6,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->TableGetAll(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->TableGetAll(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_TableGetAll() override {
+    ~WithRawCallbackMethod_TableGetAll() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2340,37 +1682,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* TableGetAll(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* TableGetAll(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_TableGet : public BaseClass {
+  class WithRawCallbackMethod_TableGet : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_TableGet() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(8,
+    WithRawCallbackMethod_TableGet() {
+      ::grpc::Service::MarkMethodRawCallback(7,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->TableGet(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->TableGet(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_TableGet() override {
+    ~WithRawCallbackMethod_TableGet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2378,37 +1704,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* TableGet(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* TableGet(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_TableRemove : public BaseClass {
+  class WithRawCallbackMethod_TableRemove : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_TableRemove() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(9,
+    WithRawCallbackMethod_TableRemove() {
+      ::grpc::Service::MarkMethodRawCallback(8,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->TableRemove(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->TableRemove(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_TableRemove() override {
+    ~WithRawCallbackMethod_TableRemove() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2416,37 +1726,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* TableRemove(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* TableRemove(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_TableRemoveAll : public BaseClass {
+  class WithRawCallbackMethod_TableRemoveAll : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_TableRemoveAll() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(10,
+    WithRawCallbackMethod_TableRemoveAll() {
+      ::grpc::Service::MarkMethodRawCallback(9,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->TableRemoveAll(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->TableRemoveAll(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_TableRemoveAll() override {
+    ~WithRawCallbackMethod_TableRemoveAll() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2454,37 +1748,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* TableRemoveAll(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* TableRemoveAll(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_SetPort : public BaseClass {
+  class WithRawCallbackMethod_SetPort : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_SetPort() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(11,
+    WithRawCallbackMethod_SetPort() {
+      ::grpc::Service::MarkMethodRawCallback(10,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SetPort(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SetPort(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_SetPort() override {
+    ~WithRawCallbackMethod_SetPort() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2492,37 +1770,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* SetPort(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* SetPort(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_DelPort : public BaseClass {
+  class WithRawCallbackMethod_DelPort : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_DelPort() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(12,
+    WithRawCallbackMethod_DelPort() {
+      ::grpc::Service::MarkMethodRawCallback(11,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->DelPort(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->DelPort(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_DelPort() override {
+    ~WithRawCallbackMethod_DelPort() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2530,37 +1792,21 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* DelPort(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* DelPort(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_SetPeer : public BaseClass {
+  class WithRawCallbackMethod_SetPeer : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_SetPeer() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(13,
+    WithRawCallbackMethod_SetPeer() {
+      ::grpc::Service::MarkMethodRawCallback(12,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SetPeer(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SetPeer(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_SetPeer() override {
+    ~WithRawCallbackMethod_SetPeer() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -2568,14 +1814,8 @@ class Polycube final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* SetPeer(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* SetPeer(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_Unsubscribe : public BaseClass {
@@ -2686,39 +1926,12 @@ class Polycube final {
     virtual ::grpc::Status StreamedCreateCube(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::commons::CubeManagement,::commons::Bool>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
-  class WithStreamedUnaryMethod_SimpleUnaryMethod : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithStreamedUnaryMethod_SimpleUnaryMethod() {
-      ::grpc::Service::MarkMethodStreamed(5,
-        new ::grpc::internal::StreamedUnaryHandler<
-          ::commons::ToPolycubed, ::commons::ToServiced>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
-                     ::commons::ToPolycubed, ::commons::ToServiced>* streamer) {
-                       return this->StreamedSimpleUnaryMethod(context,
-                         streamer);
-                  }));
-    }
-    ~WithStreamedUnaryMethod_SimpleUnaryMethod() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable regular version of this method
-    ::grpc::Status SimpleUnaryMethod(::grpc::ServerContext* /*context*/, const ::commons::ToPolycubed* /*request*/, ::commons::ToServiced* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedSimpleUnaryMethod(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::commons::ToPolycubed,::commons::ToServiced>* server_unary_streamer) = 0;
-  };
-  template <class BaseClass>
   class WithStreamedUnaryMethod_TableSet : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_TableSet() {
-      ::grpc::Service::MarkMethodStreamed(6,
+      ::grpc::Service::MarkMethodStreamed(5,
         new ::grpc::internal::StreamedUnaryHandler<
           ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](::grpc::ServerContext* context,
@@ -2745,7 +1958,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_TableGetAll() {
-      ::grpc::Service::MarkMethodStreamed(7,
+      ::grpc::Service::MarkMethodStreamed(6,
         new ::grpc::internal::StreamedUnaryHandler<
           ::commons::ServicedToDataplaneRequest, ::commons::MapValue>(
             [this](::grpc::ServerContext* context,
@@ -2772,7 +1985,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_TableGet() {
-      ::grpc::Service::MarkMethodStreamed(8,
+      ::grpc::Service::MarkMethodStreamed(7,
         new ::grpc::internal::StreamedUnaryHandler<
           ::commons::ServicedToDataplaneRequest, ::commons::MapValue>(
             [this](::grpc::ServerContext* context,
@@ -2799,7 +2012,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_TableRemove() {
-      ::grpc::Service::MarkMethodStreamed(9,
+      ::grpc::Service::MarkMethodStreamed(8,
         new ::grpc::internal::StreamedUnaryHandler<
           ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](::grpc::ServerContext* context,
@@ -2826,7 +2039,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_TableRemoveAll() {
-      ::grpc::Service::MarkMethodStreamed(10,
+      ::grpc::Service::MarkMethodStreamed(9,
         new ::grpc::internal::StreamedUnaryHandler<
           ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](::grpc::ServerContext* context,
@@ -2853,7 +2066,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_SetPort() {
-      ::grpc::Service::MarkMethodStreamed(11,
+      ::grpc::Service::MarkMethodStreamed(10,
         new ::grpc::internal::StreamedUnaryHandler<
           ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](::grpc::ServerContext* context,
@@ -2880,7 +2093,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_DelPort() {
-      ::grpc::Service::MarkMethodStreamed(12,
+      ::grpc::Service::MarkMethodStreamed(11,
         new ::grpc::internal::StreamedUnaryHandler<
           ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](::grpc::ServerContext* context,
@@ -2907,7 +2120,7 @@ class Polycube final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_SetPeer() {
-      ::grpc::Service::MarkMethodStreamed(13,
+      ::grpc::Service::MarkMethodStreamed(12,
         new ::grpc::internal::StreamedUnaryHandler<
           ::commons::ServicedToDataplaneRequest, ::commons::Bool>(
             [this](::grpc::ServerContext* context,
@@ -2928,9 +2141,9 @@ class Polycube final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedSetPeer(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::commons::ServicedToDataplaneRequest,::commons::Bool>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_Unsubscribe<WithStreamedUnaryMethod_Reload<WithStreamedUnaryMethod_DestroyCube<WithStreamedUnaryMethod_CreateCube<WithStreamedUnaryMethod_SimpleUnaryMethod<WithStreamedUnaryMethod_TableSet<WithStreamedUnaryMethod_TableGetAll<WithStreamedUnaryMethod_TableGet<WithStreamedUnaryMethod_TableRemove<WithStreamedUnaryMethod_TableRemoveAll<WithStreamedUnaryMethod_SetPort<WithStreamedUnaryMethod_DelPort<WithStreamedUnaryMethod_SetPeer<Service > > > > > > > > > > > > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_Unsubscribe<WithStreamedUnaryMethod_Reload<WithStreamedUnaryMethod_DestroyCube<WithStreamedUnaryMethod_CreateCube<WithStreamedUnaryMethod_TableSet<WithStreamedUnaryMethod_TableGetAll<WithStreamedUnaryMethod_TableGet<WithStreamedUnaryMethod_TableRemove<WithStreamedUnaryMethod_TableRemoveAll<WithStreamedUnaryMethod_SetPort<WithStreamedUnaryMethod_DelPort<WithStreamedUnaryMethod_SetPeer<Service > > > > > > > > > > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_Unsubscribe<WithStreamedUnaryMethod_Reload<WithStreamedUnaryMethod_DestroyCube<WithStreamedUnaryMethod_CreateCube<WithStreamedUnaryMethod_SimpleUnaryMethod<WithStreamedUnaryMethod_TableSet<WithStreamedUnaryMethod_TableGetAll<WithStreamedUnaryMethod_TableGet<WithStreamedUnaryMethod_TableRemove<WithStreamedUnaryMethod_TableRemoveAll<WithStreamedUnaryMethod_SetPort<WithStreamedUnaryMethod_DelPort<WithStreamedUnaryMethod_SetPeer<Service > > > > > > > > > > > > > StreamedService;
+  typedef WithStreamedUnaryMethod_Unsubscribe<WithStreamedUnaryMethod_Reload<WithStreamedUnaryMethod_DestroyCube<WithStreamedUnaryMethod_CreateCube<WithStreamedUnaryMethod_TableSet<WithStreamedUnaryMethod_TableGetAll<WithStreamedUnaryMethod_TableGet<WithStreamedUnaryMethod_TableRemove<WithStreamedUnaryMethod_TableRemoveAll<WithStreamedUnaryMethod_SetPort<WithStreamedUnaryMethod_DelPort<WithStreamedUnaryMethod_SetPeer<Service > > > > > > > > > > > > StreamedService;
 };
 
 }  // namespace commons

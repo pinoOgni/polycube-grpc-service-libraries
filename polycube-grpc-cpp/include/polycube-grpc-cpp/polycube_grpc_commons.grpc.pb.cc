@@ -27,7 +27,6 @@ static const char* Polycube_method_names[] = {
   "/commons.Polycube/Reload",
   "/commons.Polycube/DestroyCube",
   "/commons.Polycube/CreateCube",
-  "/commons.Polycube/SimpleUnaryMethod",
   "/commons.Polycube/TableSet",
   "/commons.Polycube/TableGetAll",
   "/commons.Polycube/TableGet",
@@ -40,36 +39,35 @@ static const char* Polycube_method_names[] = {
 
 std::unique_ptr< Polycube::Stub> Polycube::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
   (void)options;
-  std::unique_ptr< Polycube::Stub> stub(new Polycube::Stub(channel));
+  std::unique_ptr< Polycube::Stub> stub(new Polycube::Stub(channel, options));
   return stub;
 }
 
-Polycube::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
-  : channel_(channel), rpcmethod_Unsubscribe_(Polycube_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_Subscribe_(Polycube_method_names[1], ::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
-  , rpcmethod_Reload_(Polycube_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_DestroyCube_(Polycube_method_names[3], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_CreateCube_(Polycube_method_names[4], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SimpleUnaryMethod_(Polycube_method_names[5], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_TableSet_(Polycube_method_names[6], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_TableGetAll_(Polycube_method_names[7], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_TableGet_(Polycube_method_names[8], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_TableRemove_(Polycube_method_names[9], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_TableRemoveAll_(Polycube_method_names[10], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetPort_(Polycube_method_names[11], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_DelPort_(Polycube_method_names[12], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SetPeer_(Polycube_method_names[13], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+Polycube::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
+  : channel_(channel), rpcmethod_Unsubscribe_(Polycube_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Subscribe_(Polycube_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
+  , rpcmethod_Reload_(Polycube_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_DestroyCube_(Polycube_method_names[3], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_CreateCube_(Polycube_method_names[4], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_TableSet_(Polycube_method_names[5], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_TableGetAll_(Polycube_method_names[6], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_TableGet_(Polycube_method_names[7], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_TableRemove_(Polycube_method_names[8], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_TableRemoveAll_(Polycube_method_names[9], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetPort_(Polycube_method_names[10], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_DelPort_(Polycube_method_names[11], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetPeer_(Polycube_method_names[12], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status Polycube::Stub::Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo& request, ::commons::Bool* response) {
   return ::grpc::internal::BlockingUnaryCall< ::commons::ServicedInfo, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_Unsubscribe_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::ServicedInfo, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Unsubscribe_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::Unsubscribe(::grpc::ClientContext* context, const ::commons::ServicedInfo* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Unsubscribe_, context, request, response, reactor);
 }
 
@@ -88,7 +86,7 @@ void Polycube::Stub::experimental_async::Unsubscribe(::grpc::ClientContext* cont
   return ::grpc::internal::ClientReaderWriterFactory< ::commons::ToPolycubed, ::commons::ToServiced>::Create(channel_.get(), rpcmethod_Subscribe_, context);
 }
 
-void Polycube::Stub::experimental_async::Subscribe(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::commons::ToPolycubed,::commons::ToServiced>* reactor) {
+void Polycube::Stub::async::Subscribe(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::commons::ToPolycubed,::commons::ToServiced>* reactor) {
   ::grpc::internal::ClientCallbackReaderWriterFactory< ::commons::ToPolycubed,::commons::ToServiced>::Create(stub_->channel_.get(), stub_->rpcmethod_Subscribe_, context, reactor);
 }
 
@@ -104,11 +102,11 @@ void Polycube::Stub::experimental_async::Subscribe(::grpc::ClientContext* contex
   return ::grpc::internal::BlockingUnaryCall< ::commons::Dataplane, ::commons::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_Reload_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::Reload(::grpc::ClientContext* context, const ::commons::Dataplane* request, ::commons::Empty* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::Reload(::grpc::ClientContext* context, const ::commons::Dataplane* request, ::commons::Empty* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::Dataplane, ::commons::Empty, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Reload_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::Reload(::grpc::ClientContext* context, const ::commons::Dataplane* request, ::commons::Empty* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::Reload(::grpc::ClientContext* context, const ::commons::Dataplane* request, ::commons::Empty* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Reload_, context, request, response, reactor);
 }
 
@@ -127,11 +125,11 @@ void Polycube::Stub::experimental_async::Reload(::grpc::ClientContext* context, 
   return ::grpc::internal::BlockingUnaryCall< ::commons::CubeManagement, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_DestroyCube_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::DestroyCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::DestroyCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::CubeManagement, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_DestroyCube_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::DestroyCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::DestroyCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_DestroyCube_, context, request, response, reactor);
 }
 
@@ -150,11 +148,11 @@ void Polycube::Stub::experimental_async::DestroyCube(::grpc::ClientContext* cont
   return ::grpc::internal::BlockingUnaryCall< ::commons::CubeManagement, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_CreateCube_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::CreateCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::CreateCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::CubeManagement, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CreateCube_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::CreateCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::CreateCube(::grpc::ClientContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CreateCube_, context, request, response, reactor);
 }
 
@@ -169,38 +167,15 @@ void Polycube::Stub::experimental_async::CreateCube(::grpc::ClientContext* conte
   return result;
 }
 
-::grpc::Status Polycube::Stub::SimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::commons::ToServiced* response) {
-  return ::grpc::internal::BlockingUnaryCall< ::commons::ToPolycubed, ::commons::ToServiced, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SimpleUnaryMethod_, context, request, response);
-}
-
-void Polycube::Stub::experimental_async::SimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed* request, ::commons::ToServiced* response, std::function<void(::grpc::Status)> f) {
-  ::grpc::internal::CallbackUnaryCall< ::commons::ToPolycubed, ::commons::ToServiced, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SimpleUnaryMethod_, context, request, response, std::move(f));
-}
-
-void Polycube::Stub::experimental_async::SimpleUnaryMethod(::grpc::ClientContext* context, const ::commons::ToPolycubed* request, ::commons::ToServiced* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
-  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SimpleUnaryMethod_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::commons::ToServiced>* Polycube::Stub::PrepareAsyncSimpleUnaryMethodRaw(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::commons::ToServiced, ::commons::ToPolycubed, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SimpleUnaryMethod_, context, request);
-}
-
-::grpc::ClientAsyncResponseReader< ::commons::ToServiced>* Polycube::Stub::AsyncSimpleUnaryMethodRaw(::grpc::ClientContext* context, const ::commons::ToPolycubed& request, ::grpc::CompletionQueue* cq) {
-  auto* result =
-    this->PrepareAsyncSimpleUnaryMethodRaw(context, request, cq);
-  result->StartCall();
-  return result;
-}
-
 ::grpc::Status Polycube::Stub::TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest& request, ::commons::Bool* response) {
   return ::grpc::internal::BlockingUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_TableSet_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_TableSet_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::TableSet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_TableSet_, context, request, response, reactor);
 }
 
@@ -219,11 +194,11 @@ void Polycube::Stub::experimental_async::TableSet(::grpc::ClientContext* context
   return ::grpc::internal::BlockingUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::MapValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_TableGetAll_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::TableGetAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::TableGetAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::MapValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_TableGetAll_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::TableGetAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::TableGetAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_TableGetAll_, context, request, response, reactor);
 }
 
@@ -242,11 +217,11 @@ void Polycube::Stub::experimental_async::TableGetAll(::grpc::ClientContext* cont
   return ::grpc::internal::BlockingUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::MapValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_TableGet_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::TableGet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::TableGet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::MapValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_TableGet_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::TableGet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::TableGet(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::MapValue* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_TableGet_, context, request, response, reactor);
 }
 
@@ -265,11 +240,11 @@ void Polycube::Stub::experimental_async::TableGet(::grpc::ClientContext* context
   return ::grpc::internal::BlockingUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_TableRemove_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::TableRemove(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::TableRemove(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_TableRemove_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::TableRemove(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::TableRemove(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_TableRemove_, context, request, response, reactor);
 }
 
@@ -288,11 +263,11 @@ void Polycube::Stub::experimental_async::TableRemove(::grpc::ClientContext* cont
   return ::grpc::internal::BlockingUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_TableRemoveAll_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::TableRemoveAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::TableRemoveAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_TableRemoveAll_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::TableRemoveAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::TableRemoveAll(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_TableRemoveAll_, context, request, response, reactor);
 }
 
@@ -311,11 +286,11 @@ void Polycube::Stub::experimental_async::TableRemoveAll(::grpc::ClientContext* c
   return ::grpc::internal::BlockingUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetPort_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::SetPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::SetPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetPort_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::SetPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::SetPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetPort_, context, request, response, reactor);
 }
 
@@ -334,11 +309,11 @@ void Polycube::Stub::experimental_async::SetPort(::grpc::ClientContext* context,
   return ::grpc::internal::BlockingUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_DelPort_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::DelPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::DelPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_DelPort_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::DelPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::DelPort(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_DelPort_, context, request, response, reactor);
 }
 
@@ -357,11 +332,11 @@ void Polycube::Stub::experimental_async::DelPort(::grpc::ClientContext* context,
   return ::grpc::internal::BlockingUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetPeer_, context, request, response);
 }
 
-void Polycube::Stub::experimental_async::SetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
+void Polycube::Stub::async::SetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, std::function<void(::grpc::Status)> f) {
   ::grpc::internal::CallbackUnaryCall< ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetPeer_, context, request, response, std::move(f));
 }
 
-void Polycube::Stub::experimental_async::SetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+void Polycube::Stub::async::SetPeer(::grpc::ClientContext* context, const ::commons::ServicedToDataplaneRequest* request, ::commons::Bool* response, ::grpc::ClientUnaryReactor* reactor) {
   ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetPeer_, context, request, response, reactor);
 }
 
@@ -430,16 +405,6 @@ Polycube::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       Polycube_method_names[5],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< Polycube::Service, ::commons::ToPolycubed, ::commons::ToServiced, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
-          [](Polycube::Service* service,
-             ::grpc::ServerContext* ctx,
-             const ::commons::ToPolycubed* req,
-             ::commons::ToServiced* resp) {
-               return service->SimpleUnaryMethod(ctx, req, resp);
-             }, this)));
-  AddMethod(new ::grpc::internal::RpcServiceMethod(
-      Polycube_method_names[6],
-      ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< Polycube::Service, ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](Polycube::Service* service,
              ::grpc::ServerContext* ctx,
@@ -448,7 +413,7 @@ Polycube::Service::Service() {
                return service->TableSet(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      Polycube_method_names[7],
+      Polycube_method_names[6],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< Polycube::Service, ::commons::ServicedToDataplaneRequest, ::commons::MapValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](Polycube::Service* service,
@@ -458,7 +423,7 @@ Polycube::Service::Service() {
                return service->TableGetAll(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      Polycube_method_names[8],
+      Polycube_method_names[7],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< Polycube::Service, ::commons::ServicedToDataplaneRequest, ::commons::MapValue, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](Polycube::Service* service,
@@ -468,7 +433,7 @@ Polycube::Service::Service() {
                return service->TableGet(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      Polycube_method_names[9],
+      Polycube_method_names[8],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< Polycube::Service, ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](Polycube::Service* service,
@@ -478,7 +443,7 @@ Polycube::Service::Service() {
                return service->TableRemove(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      Polycube_method_names[10],
+      Polycube_method_names[9],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< Polycube::Service, ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](Polycube::Service* service,
@@ -488,7 +453,7 @@ Polycube::Service::Service() {
                return service->TableRemoveAll(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      Polycube_method_names[11],
+      Polycube_method_names[10],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< Polycube::Service, ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](Polycube::Service* service,
@@ -498,7 +463,7 @@ Polycube::Service::Service() {
                return service->SetPort(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      Polycube_method_names[12],
+      Polycube_method_names[11],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< Polycube::Service, ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](Polycube::Service* service,
@@ -508,7 +473,7 @@ Polycube::Service::Service() {
                return service->DelPort(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      Polycube_method_names[13],
+      Polycube_method_names[12],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< Polycube::Service, ::commons::ServicedToDataplaneRequest, ::commons::Bool, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](Polycube::Service* service,
@@ -550,13 +515,6 @@ Polycube::Service::~Service() {
 }
 
 ::grpc::Status Polycube::Service::CreateCube(::grpc::ServerContext* context, const ::commons::CubeManagement* request, ::commons::Bool* response) {
-  (void) context;
-  (void) request;
-  (void) response;
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-}
-
-::grpc::Status Polycube::Service::SimpleUnaryMethod(::grpc::ServerContext* context, const ::commons::ToPolycubed* request, ::commons::ToServiced* response) {
   (void) context;
   (void) request;
   (void) response;

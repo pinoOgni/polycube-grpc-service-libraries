@@ -5,32 +5,48 @@ include(../cmake/common.cmake)
 get_filename_component(pc_proto "../../protos/polycube_grpc_commons.proto" ABSOLUTE)
 get_filename_component(pc_proto_path "${pc_proto}" PATH)
 
-# Generated sources
-set(pc_proto_srcs "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp/polycube_grpc_commons.pb.cc")
-set(pc_proto_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp/polycube_grpc_commons.pb.h")
-set(pc_grpc_srcs "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp/polycube_grpc_commons.grpc.pb.cc")
-set(pc_grpc_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp/polycube_grpc_commons.grpc.pb.h")
+option(REGENERATE_LIBRARY "Regenerate grpc and protobuf files from proto file" OFF)
 
 message(STATUS "CMAKE_SOURCE_DIR = ${CMAKE_SOURCE_DIR}")
 message(STATUS "{CMAKE_CURRENT_SOURCE_DIR} = ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "{CMAKE_CURRENT_BINARY_DIR} = ${CMAKE_CURRENT_BINARY_DIR}")
 
-add_custom_command(
-      OUTPUT "${pc_proto_srcs}" "${pc_proto_hdrs}" "${pc_grpc_srcs}" "${pc_grpc_hdrs}"
-      COMMAND ${_PROTOBUF_PROTOC}
-      ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
-        --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
-        -I "${pc_proto_path}"
-        --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
-        "${pc_proto}"
-      COMMAND ${_PROTOBUF_PROTOC}
-      ARGS --grpc_out "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp"
-        --cpp_out "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp"
-        -I "${pc_proto_path}"
-        --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
-        "${pc_proto}"
-      DEPENDS "${pc_proto}")
 
+if (NOT REGENERATE_LIBRARY)
+    message(STATUS "REGENERATE_LIBRARY OFF")
+    # Generated sources
+    set(pc_proto_srcs "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp/polycube_grpc_commons.pb.cc")
+    set(pc_proto_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp/polycube_grpc_commons.pb.h")
+    set(pc_grpc_srcs "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp/polycube_grpc_commons.grpc.pb.cc")
+    set(pc_grpc_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp/polycube_grpc_commons.grpc.pb.h")
+    set(destination_generated_file "${CMAKE_CURRENT_BINARY_DIR}/polycube-grpc-cpp/")
+    configure_file(${pc_proto_srcs} ${destination_generated_file} COPYONLY)   
+    configure_file(${pc_proto_hdrs} ${destination_generated_file} COPYONLY)  
+    configure_file(${pc_grpc_srcs} ${destination_generated_file} COPYONLY)  
+    configure_file(${pc_grpc_hdrs} ${destination_generated_file} COPYONLY)  
+else() 
+    message(STATUS "REGENERATE_LIBRARY ON")
+    # Generated sources
+    set(pc_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/polycube_grpc_commons.pb.cc")
+    set(pc_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/polycube_grpc_commons.pb.h")
+    set(pc_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/polycube_grpc_commons.grpc.pb.cc")
+    set(pc_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/polycube_grpc_commons.grpc.pb.h")
+    add_custom_command(
+        OUTPUT "${pc_proto_srcs}" "${pc_proto_hdrs}" "${pc_grpc_srcs}" "${pc_grpc_hdrs}"
+        COMMAND ${_PROTOBUF_PROTOC}
+        ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
+            --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
+            -I "${pc_proto_path}"
+            --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
+            "${pc_proto}"
+        COMMAND ${_PROTOBUF_PROTOC}
+        ARGS --grpc_out "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp"
+            --cpp_out "${CMAKE_CURRENT_SOURCE_DIR}/polycube-grpc-cpp"
+            -I "${pc_proto_path}"
+            --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
+            "${pc_proto}"
+        DEPENDS "${pc_proto}")
+endif()
 message(STATUS "pc_proto_srcs = ${pc_proto_srcs}")
 message(STATUS "pc_proto_hdrs = ${pc_proto_hdrs}")
 message(STATUS "pc_grpc_srcs = ${pc_grpc_srcs}")

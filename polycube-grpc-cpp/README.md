@@ -4,7 +4,7 @@
 
 **The polycube-grpc-cpp library is in a beta version, after an initial phase, efforts have focused on Go and Python We are trying to keep it updated as much as we can**
 
-This is the Polycube gRPC library in C ++.
+This is the Polycube gRPC library in C++.
 
 
 ## TLDR
@@ -51,7 +51,7 @@ polycubeclientgrpc.RegisterHandlerPost(":cubeName/",&createCube);
     * the developer decides that the Controlplane should only handle requests from the user then calls the ReadTheStream method normally
     * the developer decides that the Controlplane in addition to handling user calls, must also do something else so call the ReadTheStream method using a thread and then join
 
-Turning now to the methods that implement the Controlplane, they are simple C ++ methods that must mirror the logic of the service, inside which a call is made to the gRPC method of the library. For example:
+Turning now to the methods that implement the Controlplane, they are simple C++ methods that must mirror the logic of the service, inside which a call is made to the gRPC method of the library. For example:
 ```
 ToPolycubed setAction(ToServiced request, PolycubeClient* polycubeclientgrpc) {
   

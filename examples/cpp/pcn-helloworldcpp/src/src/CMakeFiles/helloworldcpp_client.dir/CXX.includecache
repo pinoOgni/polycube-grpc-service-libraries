@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/giuseppe/polycube-grpc-service-libraries/examples/cpp/pcn-helloworldcpp/src/Helloworldcpp_dp_egress.h
+string
+-
+
+/home/giuseppe/polycube-grpc-service-libraries/examples/cpp/pcn-helloworldcpp/src/Helloworldcpp_dp_ingress.h
+string
+-
+bcc/helpers.h
+-
+bcc/proto.h
+-
+
+/home/giuseppe/polycube-grpc-service-libraries/examples/cpp/pcn-helloworldcpp/src/helloworldcpp_client.cc
+helloworldcpp_client.h
+/home/giuseppe/polycube-grpc-service-libraries/examples/cpp/pcn-helloworldcpp/src/helloworldcpp_client.h
+
+/home/giuseppe/polycube-grpc-service-libraries/examples/cpp/pcn-helloworldcpp/src/helloworldcpp_client.h
+polycube-grpc-cpp/polycube_client.h
+/home/giuseppe/polycube-grpc-service-libraries/examples/cpp/pcn-helloworldcpp/src/polycube-grpc-cpp/polycube_client.h
+chrono
+-
+thread
+-
+stdlib.h
+-
+Helloworldcpp_dp_egress.h
+/home/giuseppe/polycube-grpc-service-libraries/examples/cpp/pcn-helloworldcpp/src/Helloworldcpp_dp_egress.h
+Helloworldcpp_dp_ingress.h
+/home/giuseppe/polycube-grpc-service-libraries/examples/cpp/pcn-helloworldcpp/src/Helloworldcpp_dp_ingress.h
+polycube/services/json.hpp
+/home/giuseppe/polycube-grpc-service-libraries/examples/cpp/pcn-helloworldcpp/src/polycube/services/json.hpp
+

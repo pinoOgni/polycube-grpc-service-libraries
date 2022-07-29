@@ -1,6 +1,12 @@
 # polycube-grpc-service-libraries
-GRPC libraries to allow the writing of a stand-alone Polycube service also in other languages
+GRPC libraries to allow the writing of a stand-alone Polycube service also in other languages. If you want to use it you need to use my [Polycube fork](https://github.com/pinoOgni/polycube) because I haven't had a chance to merge the code into the main repo yet. 
 
+# Current Status
+
+**WARNING**: I'm no longer active in the development of polycube-grpc-service-libraries an probably some documentation and some comments are missing. I still hope there is enough.
+
+
+# Repository organization
 
 This repository contains the client side grpc libraries to interface with Polycube and is composed as follows:
 

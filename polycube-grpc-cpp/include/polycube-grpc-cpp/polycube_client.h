@@ -115,7 +115,7 @@ class PolycubeClient {
   void RegisterHandlerGet(const std::string path, ToPolycubed(*method)(ToServiced,PolycubeClient*));
   void RegisterHandlerPost(const std::string path, ToPolycubed(*method)(ToServiced,PolycubeClient*));
   void RegisterHandlerPatch(const std::string path, ToPolycubed(*method)(ToServiced,PolycubeClient*));
-  void RegisterHandlerDel(const std::string path, ToPolycubed(*method)(ToServiced,PolycubeClient*));
+  void RegisterHandlerDelete(const std::string path, ToPolycubed(*method)(ToServiced,PolycubeClient*));
   void RegisterHandlerOptions(const std::string path, ToPolycubed(*method)(ToServiced,PolycubeClient*));
 
 /*

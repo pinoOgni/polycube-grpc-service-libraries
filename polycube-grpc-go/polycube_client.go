@@ -54,7 +54,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unsafe"
+	// "unsafe"
 	"io/ioutil"
 	"encoding/json"
 	"strconv"
@@ -679,7 +679,7 @@ func TableGet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 	}
 
 
-	b, ok := key.(interface{})
+	// b, ok := key.(interface{})
 
 	// key_bytes := make([]byte, key_size)
 	// (pinoOgni): TODO, first version 
@@ -719,7 +719,7 @@ func TableSet(cube_name string, map_name string, program_type CubeInfo_ProgramTy
 		fmt.Println("Error")
 	}
 
-	b_key, ok_key := key.(interface{})
+	// b_key, ok_key := key.(interface{})
 
 	value_bytes := new(bytes.Buffer)
 	if ret_value, ok_value := value.(interface{}); ok_value {
@@ -770,7 +770,7 @@ func TableRemove(cube_name string, map_name string, program_type CubeInfo_Progra
 		fmt.Println("Error")
 	}
 
-	b_key, ok_key := key.(interface{})
+	// b_key, ok_key := key.(interface{})
 
 	// key_bytes := make([]byte, key_size)
 	// (pinoOgni): TODO, first version 

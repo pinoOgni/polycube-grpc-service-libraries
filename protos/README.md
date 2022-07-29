@@ -1,6 +1,6 @@
 # PROTO
 
-In questo file si cerca di fare una sintesi dei metodi e dei messaggi che sono implementati nel file proto
+In this file we try to summarize the methods and messages that are implemented in the proto file
 
 ## Methods
 
